@@ -1,7 +1,7 @@
 ---
 description: Independently reviews changes for correctness, regressions, security issues, and missing validation.
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash#max
+model: opencode-go/glm-5.3-flash#high
 permissions:
   - action: "*"
     resource: "*"

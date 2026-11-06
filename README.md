@@ -29,7 +29,7 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex | `gpt-6-luna` | `gpt-6.1-terra` | `gpt-6.1-sol` | `gpt-6-astra` | `gpt-6-luna` | `gpt-6.1-sol` | N/A | N/A |
 | Claude Code | `claude-haiku-5-5`, medium | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | N/A | N/A |
-| OpenCode | `opencode-go/muse-spark-1.3-contributor`, high | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/glm-5.3-flash`, max | N/A | N/A | `opencode-go/muse-spark-1.3-contributor`, high | `opencode-go/deepseek-v4.1-flash`, max |
+| OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/glm-5.3-flash`, high | `opencode-go/glm-5.3-flash`, max | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
 | Grok Build | `grok-4.7`, low | `grok-4.7`, medium | `grok-4.7`, high | `grok-4.7`, xhigh | N/A | N/A | N/A | N/A |
 
 N/A means the tool doesn't get that role. Codex leaves effort to the Chief at
@@ -88,15 +88,20 @@ Chief picks it for each task when spawning.
 
 | Agent | Assignment | Configuration |
 | --- | --- | --- |
-| `runner` | Bounded factual lookup or file discovery | Muse Spark 1.3 Contributor, high; inherited permissions |
+| `runner` | Bounded factual lookup or file discovery | DeepSeek V4.1 Flash, high; inherited permissions |
 | `fixer` | Implement an agreed change and verify it | DeepSeek V4.1 Flash, max; inherited permissions |
-| `inspector` | Review a supplied diff for concrete defects | DeepSeek V4.1 Flash, max; inspection tools |
+| `inspector` | Review a supplied diff for concrete defects | GLM-5.3-Flash, high; inspection tools |
 | `consultant` | Advise on unresolved design choices and stubborn bugs | GLM-5.3-Flash, max; inspection tools |
-| `explore` | Trace behavior and dependencies across files | Muse Spark 1.3 Contributor, high; built-in exploration permissions |
+| `explore` | Trace behavior and dependencies across files | DeepSeek V4.1 Flash, high; built-in exploration permissions |
 | `general` | Mixed investigation and implementation | DeepSeek V4.1 Flash, max; built-in general permissions |
 
 Inspector and Consultant can only read, search, and fetch. `explore` and
 `general` are OpenCode's built-in agents with this setup's models.
+
+OpenCode uses only two models. DeepSeek V4.1 Flash does the lookups and
+implementation, and GLM-5.3-Flash reviews and advises, so Inspector never
+reviews code written by its own model. High-risk changes also get one deeper
+review from Consultant on the final diff.
 
 ### Grok orchestration
 

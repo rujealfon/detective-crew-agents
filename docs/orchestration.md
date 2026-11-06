@@ -129,10 +129,16 @@ the primary agent.
 The role table lives in the [README](../README.md#opencode-orchestration).
 
 Follow the [consultation and handoff guidance](#consultation-and-handoffs), using
-`explore` for codebase tracing. Inspector and Consultant use different models to
-provide different perspectives; this setup does not assume a universal capability
-ranking between them. Revisit the split based on the quality of their findings and
-recommendations on your projects.
+`explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1 Flash
+runs Runner and `explore` at high, and Fixer and `general` at max. GLM-5.3-Flash
+runs Inspector at high and Consultant at max, so reviews always come from a
+different model than the one that wrote the code. For high-risk changes the
+primary agent also asks Consultant for one deeper review of the final diff.
+Consultant gets the diff, baseline, requirements, and test results without
+Inspector's findings, so it reviews independently. The primary agent reconciles
+both reviews. Watch GLM-5.3-Flash usage in the console: if regular reviews near
+its weekly allowance, move Inspector back to DeepSeek. Revisit the split based on the quality
+of findings and recommendations on your projects.
 
 Inspector and Consultant deny all permissions, then allow only `read`,
 `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and further
@@ -306,7 +312,8 @@ Claude uses explicit `claude-haiku-5-5`, `claude-sonnet-5-5`, and
 `claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` provider and encodes
 effort as a model variant, such as `#medium`, `#high`, or `#max`. Access to these
 models and variants depends on your account and provider. Check that they are available
-before using the agents. [Claude models](https://platform.claude.com/docs/en/models/overview),
+before using the agents. OpenCode Go blocks DeepSeek until the workspace allows
+the Global region; see [install](install.md). [Claude models](https://platform.claude.com/docs/en/models/overview),
 [OpenAI models](https://developers.openai.com/api/docs/models), and
 [OpenCode model variants](https://opencode.ai/v2/docs/models#variants).
 

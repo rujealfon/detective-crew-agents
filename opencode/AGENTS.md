@@ -13,6 +13,17 @@ and final verification in the primary agent.
 - Use `inspector` for independent assessment of correctness, regressions, security
   issues, and missing validation. Supply its diff, baseline, and test results;
   its inspection permissions exclude shell execution and edits.
+- For high-risk changes, also request one deeper review of the final diff from
+  `consultant`, which reasons at a higher effort than `inspector`. High-risk
+  changes include authentication, authorization, sessions, tokens, or crypto;
+  migrations or schema changes; data deletion; payment or billing logic;
+  secrets, CI/CD, or infrastructure; removing routes or guards; untrusted input
+  reaching SQL, shell, templates, deserialization, redirects, or server-side
+  fetches; and any change whose failure would be silent or irreversible.
+  Supply the diff, baseline, requirements, and test results, but not
+  `inspector`'s findings, so the review stays independent. Ask for concrete
+  defects with severity, file and line, and evidence. Reconcile both reviews in
+  the primary agent.
 - Use `consultant` before dependent implementation when architecture or design
   trade-offs remain unresolved, or when two evidence-based attempts have not fixed
   a difficult bug. Provide relevant context, constraints, options, and previous

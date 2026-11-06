@@ -44,6 +44,17 @@ OpenCode's `runner`, `fixer`, `inspector`, and `consultant` definitions live in
 `~/.config/opencode/agents/*.md`. Its `explore` and `general` model and description overrides
 live in `~/.config/opencode/opencode.jsonc`.
 
+The OpenCode agents use two [OpenCode Go](https://opencode.ai/docs/go/) models:
+DeepSeek V4.1 Flash for `runner`, `explore`, `fixer`, and `general`, and
+GLM-5.3-Flash for `inspector` and `consultant`. By default, Go allows only the Europe and
+United States regions, which blocks DeepSeek. Before you use the agents, have a
+workspace owner or admin open **Settings › Privacy** in the
+[OpenCode Console](https://opencode.ai/console) and select **Global** under
+**Regions**. If you skip this, every agent except `inspector` and `consultant` fails. GLM-5.3-Flash
+needs no privacy change. DeepSeek requests count double against your Go
+allowance during peak hours: 01:00–04:00 and 06:00–10:00 UTC, Monday through
+Friday.
+
 For project-specific instructions, put `AGENTS.md` or `CLAUDE.md` inside the
 repository. Claude Code v2.1.277 and later can load project `AGENTS.md`, with
 loading determined by its Project instructions setting and existing project

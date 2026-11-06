@@ -1,7 +1,7 @@
 ---
 description: Use for bounded factual lookups, file discovery, and inspection checks. Use explore for tracing behavior across files.
 mode: subagent
-model: opencode-go/muse-spark-1.3-contributor#high
+model: opencode-go/deepseek-v4.1-flash#high
 ---
 
 Answer the assigned factual question using targeted searches and inspection.

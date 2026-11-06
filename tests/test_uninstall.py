@@ -199,7 +199,7 @@ class UninstallTests(unittest.TestCase):
         for action in ("read", "glob", "grep", "webfetch", "websearch"):
             expected_permissions.extend((f"  - action: {action}", '    resource: "*"', '    effect: allow'))
         for agent, model in (("consultant", "glm-5.3-flash#max"),
-                             ("inspector", "deepseek-v4.1-flash#max")):
+                             ("inspector", "glm-5.3-flash#high")):
             with self.subTest(agent=agent):
                 installed = self.home / f".config/opencode/agents/{agent}.md"
                 self.assertEqual(installed.read_bytes(), (ROOT / f"opencode/{agent}.md").read_bytes())
@@ -208,6 +208,46 @@ class UninstallTests(unittest.TestCase):
                 self.assertIn("mode: subagent\n", frontmatter)
                 # Exact allowlist plus the deny-all rule excludes shell, edits, and subagents.
                 self.assertEqual(frontmatter.split("permissions:\n", 1)[1].splitlines(), expected_permissions)
+
+    def test_opencode_uses_only_deepseek_and_glm(self):
+        allowed = {"opencode-go/deepseek-v4.1-flash", "opencode-go/glm-5.3-flash"}
+        models = []
+        for agent in ("runner", "fixer", "inspector", "consultant"):
+            text = (self.home / f".config/opencode/agents/{agent}.md").read_text()
+            models.append(text.split("model: ", 1)[1].split("\n", 1)[0])
+        config = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())
+        models.extend(settings["model"] for settings in config["agents"].values())
+        self.assertEqual({model.split("#", 1)[0] for model in models}, allowed)
+        self.assertEqual(models[0], "opencode-go/deepseek-v4.1-flash#high")
+        self.assertEqual(models[1], "opencode-go/deepseek-v4.1-flash#max")
+        self.assertEqual(models[2], "opencode-go/glm-5.3-flash#high")
+        self.assertEqual(config["agents"]["explore"]["model"], "opencode-go/deepseek-v4.1-flash#high")
+
+    def test_opencode_two_model_upgrade_backs_up_muse_spark_files(self):
+        previous = json.loads((ROOT / "tests/fixtures/pre-two-model-opencode.json").read_text())
+        sources = {
+            ".config/opencode/agents/runner.md": "opencode/runner.md",
+            ".config/opencode/opencode.jsonc": "opencode/opencode.jsonc",
+            ".config/opencode/AGENTS.md": "opencode/AGENTS.md",
+            ".config/opencode/agents/inspector.md": "opencode/inspector.md",
+        }
+        for name, contents in previous.items():
+            (self.home / name).write_text(contents)
+        before = self.snapshot(self.home)
+
+        blocked = self.run_command("--tool", "opencode")
+        self.assertEqual(blocked.returncode, 1)
+        self.assertIn("--update", blocked.stderr)
+        self.assertEqual(self.snapshot(self.home), before)
+
+        updated = self.run_command("--tool", "opencode", "--update")
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        for name, contents in previous.items():
+            installed = self.home / name
+            self.assertEqual(installed.read_bytes(), (ROOT / sources[name]).read_bytes())
+            backups = list(installed.parent.glob(installed.name + ".bak-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(), contents)
 
     def test_customized_opencode_consultant_blocks_upgrade_without_mutation(self):
         previous = json.loads((ROOT / "tests/fixtures/pre-consultant-opencode.json").read_text())
