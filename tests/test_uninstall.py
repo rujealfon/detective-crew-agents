@@ -230,6 +230,9 @@ class UninstallTests(unittest.TestCase):
                 self.assertIn(f"steps: {steps}\n", frontmatter)
         fixer = (self.home / ".config/opencode/agents/fixer.md").read_text().split("---\n", 2)[1]
         self.assertNotIn("steps:", fixer)
+        agents = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())["agents"]
+        self.assertEqual(agents["explore"]["steps"], 40)
+        self.assertNotIn("steps", agents["general"])
 
     def test_opencode_uses_only_deepseek_and_glm(self):
         allowed = {"opencode-go/deepseek-v4.1-flash", "opencode-go/glm-5.3-flash"}

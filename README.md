@@ -94,7 +94,7 @@ Chief picks it for each task when spawning.
 | `inspector` | Review a supplied diff for concrete defects | GLM-5.3-Flash, high; max 60 steps; inspection tools |
 | `consultant` | Advise on architecture, design trade-offs, and stubborn bugs | GLM-5.3-Flash, max; max 30 steps; inspection tools |
 | `deep-inspector` | One extra review of the riskiest settled diffs | GLM-5.3-Flash, max; max 60 steps; inspection tools |
-| `explore` | Trace behavior and dependencies across files | DeepSeek V4.1 Flash, high; built-in exploration permissions |
+| `explore` | Trace behavior and dependencies across files | DeepSeek V4.1 Flash, high; max 40 steps; built-in exploration permissions |
 | `general` | Mixed investigation and implementation | DeepSeek V4.1 Flash, max; built-in general permissions |
 
 Inspector, Deep Inspector, and Consultant can only read, search, and fetch. `explore` and

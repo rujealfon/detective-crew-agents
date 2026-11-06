@@ -3,6 +3,7 @@
   "agents": {
     "explore": {
       "model": "opencode-go/deepseek-v4.1-flash#high",
+      "steps": 40,
       "description": "Use for tracing behavior, dependencies, and likely causes across files without edits. Prefer runner for bounded factual lookups."
     },
     "general": {

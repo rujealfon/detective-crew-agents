@@ -76,7 +76,7 @@ detective-crew-agents/
 | `codex/docs/token-usage.md` | Installable context, delegation effort, and usage guidance |
 | `claude/*.md` | Claude Code agent definitions |
 | `opencode/{runner,fixer,inspector,consultant,deep-inspector}.md` | OpenCode v2 agent definitions |
-| `opencode/opencode.jsonc` | OpenCode v2 built-in `explore` and `general` model and description overrides |
+| `opencode/opencode.jsonc` | OpenCode v2 built-in `explore` and `general` model, description, and step-limit overrides |
 | `grok/*.md` | Grok Build agent definitions |
 | `codex/AGENTS.md`, `opencode/AGENTS.md` | Provider-specific global delegation instructions |
 | `claude/rules/delegation.md`, `grok/rules/delegation.md` | Provider-specific global delegation rules |

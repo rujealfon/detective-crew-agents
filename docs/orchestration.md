@@ -154,9 +154,11 @@ changes and new paths for untrusted input. The policy names the types and points
 diff needs them. When a subagent returns partial results, the primary agent
 continues it through its `sessionID` instead of starting over.
 
-Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60, 60, and 30. On the
-last step OpenCode removes tools and asks the agent to summarize, so a long task
-still ends with a report. Fixer has no step limit.
+Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60, 60, and 30,
+and the `explore` override sets 40. On the last step OpenCode removes tools and
+asks the agent to summarize, so a long task still ends with a report; continuing
+the agent through its `sessionID` resets the allowance. Fixer and `general` have
+no step limit, so an edit is never cut off halfway.
 
 Inspector, Deep Inspector, and Consultant deny all permissions, then allow only `read`,
 `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and further
@@ -165,7 +167,8 @@ run validation through the primary agent or Fixer. Every role, including
 `deep-inspector`, runs on its configured model and variant. Runner uses inspection operations by instruction but inherits
 permissions; its prompt is not a permission boundary.
 
-The `explore` and `general` overrides set only model and description, retaining
+The `explore` and `general` overrides set only model, description, and for
+`explore` a step limit, retaining
 their built-in system prompts and permissions. Their assignments carry evidence,
 ownership, validation, and handoff requirements from the delegation policy.
 Further delegation stays with the primary agent; OpenCode's built-in `general`

@@ -44,7 +44,7 @@ need to duplicate the policy in both files. [Claude global instructions](https:/
 and [global rules](https://code.claude.com/docs/en/memory#user-level-rules).
 
 OpenCode's `runner`, `fixer`, `inspector`, `consultant`, and `deep-inspector` definitions live in
-`~/.config/opencode/agents/*.md`. Its `explore` and `general` model and description overrides
+`~/.config/opencode/agents/*.md`. Its `explore` and `general` model, description, and step-limit overrides
 live in `~/.config/opencode/opencode.jsonc`.
 
 The OpenCode agents use two [OpenCode Go](https://opencode.ai/docs/go/) models:
