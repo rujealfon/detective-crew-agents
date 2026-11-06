@@ -1,6 +1,6 @@
 {
   "name": "@rujealfon/detective-crew-agents",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "Detective Crew agents for Codex, Claude Code, OpenCode, and Grok Build.",
   "bin": {
     "detective-crew-agents": "./bin/detective-crew-agents"

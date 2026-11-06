@@ -14,8 +14,8 @@ How each tool delegates to the [Detective Crew](../README.md#meet-the-detective-
 - `general` is OpenCode's built-in subagent for bounded mixed investigation and implementation when no specialist fits. Prefer Fixer for a defined change and Explore for tracing.
 
 N/A means this setup does not provide that role for the tool. The model table
-shows configured defaults; Claude Inspector escalates to Opus for the riskiest
-change types, as described below.
+shows configured defaults; for the riskiest change types, Claude Inspector
+escalates to Opus and OpenCode adds a `deep-inspector` review, as described below.
 
 Each provider has its own delegation policy. Those policies route deeper
 investigation to Codex `tracker`, OpenCode
@@ -45,6 +45,12 @@ returns a recommendation with alternatives, risks, and supporting evidence. For
 a bug, it also identifies the likely cause, evidence for and against it, and the
 cheapest check that would confirm it. The primary agent resolves open questions
 and decides the approach before assigning dependent implementation.
+
+All four policies share one rule for questions. A subagent that returns an open
+question, clarification, or decision to the primary agent, and a primary agent that
+asks the user, includes a recommended answer and a one-line reason. It asks without
+one only when it has no basis for a recommendation. The rule is global; project
+conventions that sharpen the recommendation belong in the project's own `AGENTS.md`.
 
 Tracker gathers and traces evidence; Consultant uses that evidence to evaluate
 an uncertain approach. Inspector reviews the implemented change against its
@@ -122,26 +128,53 @@ instructions that these roles and the built-ins do not cover.
 
 ## OpenCode orchestration
 
-The six roles combine four custom agents with the built-in `explore` and `general`
+The seven roles combine five custom agents with the built-in `explore` and `general`
 subagents. Keep coordination, decisions, integration, and final verification in
 the primary agent.
 
 The role table lives in the [README](../README.md#opencode-orchestration).
 
 Follow the [consultation and handoff guidance](#consultation-and-handoffs), using
-`explore` for codebase tracing. Inspector and Consultant use different models to
-provide different perspectives; this setup does not assume a universal capability
-ranking between them. Revisit the split based on the quality of their findings and
-recommendations on your projects.
+`explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1 Flash
+runs Runner and `explore` at high, and Fixer and `general` at max. GLM-5.3-Flash
+runs Inspector at high, and Consultant and `deep-inspector` at max, so reviews always come from a
+different model than the one that wrote the code. Watch GLM-5.3-Flash usage in the console: if regular reviews near
+its weekly allowance, move Inspector back to DeepSeek; `deep-inspector` and
+Consultant stay on GLM and also draw on that allowance. Revisit the split based on the quality
+of findings and recommendations on your projects.
 
-Inspector and Consultant deny all permissions, then allow only `read`,
+The OpenCode policy mirrors the [Claude orchestration](#claude-orchestration)
+rules: it plans and delegates non-trivial changes, consults before recommending on
+architecture or design questions, scopes each fixer's checks to its owned files,
+and has the primary agent run full suites once after integration. High-risk
+changes always get a review from the default Inspector. For the riskiest of them,
+the deep-review types, the primary agent also runs `deep-inspector` once on the
+settled diff, without asking first and without passing the earlier findings.
+OpenCode's documented `subagent` tool takes no per-call model or effort override,
+so `deep-inspector` is a separate agent: Inspector's prompt and permissions on
+GLM-5.3-Flash at max with a 60-step limit. Its description limits it to this
+review.
+[opencode/docs/deep-review.md](../opencode/docs/deep-review.md) lists the types and
+steps. They match Claude's Opus types, plus secrets, CI/CD, or infrastructure
+changes and new paths for untrusted input. The policy names the types and points there, so the steps load only when a
+diff needs them. When a subagent returns partial results, the primary agent
+continues it through its `sessionID` instead of starting over.
+
+Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60, 60, and 30,
+and the `explore` override sets 40. On the last step OpenCode removes tools and
+asks the agent to summarize, so a long task still ends with a report; continuing
+the agent through its `sessionID` resets the allowance. Fixer and `general` have
+no step limit, so an edit is never cut off halfway.
+
+Inspector, Deep Inspector, and Consultant deny all permissions, then allow only `read`,
 `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and further
 subagents stay denied. Supply relevant command output with their assignments and
-run validation through the primary agent or Fixer. All roles keep their configured
-model variants. Runner uses inspection operations by instruction but inherits
+run validation through the primary agent or Fixer. Every role, including
+`deep-inspector`, runs on its configured model and variant. Runner uses inspection operations by instruction but inherits
 permissions; its prompt is not a permission boundary.
 
-The `explore` and `general` overrides set only model and description, retaining
+The `explore` and `general` overrides set only model, description, and for
+`explore` a step limit, retaining
 their built-in system prompts and permissions. Their assignments carry evidence,
 ownership, validation, and handoff requirements from the delegation policy.
 Further delegation stays with the primary agent; OpenCode's built-in `general`
@@ -306,7 +339,8 @@ Claude uses explicit `claude-haiku-5-5`, `claude-sonnet-5-5`, and
 `claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` provider and encodes
 effort as a model variant, such as `#medium`, `#high`, or `#max`. Access to these
 models and variants depends on your account and provider. Check that they are available
-before using the agents. [Claude models](https://platform.claude.com/docs/en/models/overview),
+before using the agents. OpenCode Go blocks DeepSeek until the workspace allows
+the Global region; see [install](install.md). [Claude models](https://platform.claude.com/docs/en/models/overview),
 [OpenAI models](https://developers.openai.com/api/docs/models), and
 [OpenCode model variants](https://opencode.ai/v2/docs/models#variants).
 

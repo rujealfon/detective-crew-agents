@@ -28,6 +28,9 @@ Customized instructions still stop the update before any files are changed.
 
 Claude's Opus review steps install into `~/.claude/docs/opus-review.md`, outside
 `~/.claude/rules/`, so they load only when the delegation rule points to them.
+OpenCode's deep-review steps install into `~/.config/opencode/docs/deep-review.md`
+for the same reason: OpenCode always loads `AGENTS.md`, but reads the doc only
+when the policy points to it.
 
 Agent definitions install into `~/.codex/agents/`, `~/.claude/agents/`,
 `~/.config/opencode/agents/`, and `~/.grok/agents/`, respectively. OpenCode's
@@ -40,9 +43,20 @@ An empty global `CLAUDE.md` is fine: the delegation rule still loads. There is n
 need to duplicate the policy in both files. [Claude global instructions](https://code.claude.com/docs/en/memory#choose-where-to-put-claudemd-files)
 and [global rules](https://code.claude.com/docs/en/memory#user-level-rules).
 
-OpenCode's `runner`, `fixer`, `inspector`, and `consultant` definitions live in
-`~/.config/opencode/agents/*.md`. Its `explore` and `general` model and description overrides
+OpenCode's `runner`, `fixer`, `inspector`, `consultant`, and `deep-inspector` definitions live in
+`~/.config/opencode/agents/*.md`. Its `explore` and `general` model, description, and step-limit overrides
 live in `~/.config/opencode/opencode.jsonc`.
+
+The OpenCode agents use two [OpenCode Go](https://opencode.ai/docs/go/) models:
+DeepSeek V4.1 Flash for `runner`, `explore`, `fixer`, and `general`, and
+GLM-5.3-Flash for `inspector`, `deep-inspector`, and `consultant`. By default, Go allows only the Europe and
+United States regions, which blocks DeepSeek. Before you use the agents, have a
+workspace owner or admin open **Settings › Privacy** in the
+[OpenCode Console](https://opencode.ai/console) and select **Global** under
+**Regions**. If you skip this, every agent except the three GLM agents fails. GLM-5.3-Flash
+needs no privacy change. DeepSeek requests count double against your Go
+allowance during peak hours: 01:00–04:00 and 06:00–10:00 UTC, Monday through
+Friday.
 
 For project-specific instructions, put `AGENTS.md` or `CLAUDE.md` inside the
 repository. Claude Code v2.1.277 and later can load project `AGENTS.md`, with

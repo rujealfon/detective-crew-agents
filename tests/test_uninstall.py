@@ -29,7 +29,7 @@ class UninstallTests(unittest.TestCase):
         installed = self.run_command()
         self.assertEqual(installed.returncode, 0, installed.stderr)
         self.installed_files = [path for path in self.home.rglob("*") if path.is_file()]
-        self.assertEqual(len(self.installed_files), 25)
+        self.assertEqual(len(self.installed_files), 27)
 
     def test_codex_token_reference_is_installed_and_removed(self):
         reference = self.home / ".codex/docs/token-usage.md"
@@ -199,7 +199,8 @@ class UninstallTests(unittest.TestCase):
         for action in ("read", "glob", "grep", "webfetch", "websearch"):
             expected_permissions.extend((f"  - action: {action}", '    resource: "*"', '    effect: allow'))
         for agent, model in (("consultant", "glm-5.3-flash#max"),
-                             ("inspector", "deepseek-v4.1-flash#max")):
+                             ("inspector", "glm-5.3-flash#high"),
+                             ("deep-inspector", "glm-5.3-flash#max")):
             with self.subTest(agent=agent):
                 installed = self.home / f".config/opencode/agents/{agent}.md"
                 self.assertEqual(installed.read_bytes(), (ROOT / f"opencode/{agent}.md").read_bytes())
@@ -208,6 +209,70 @@ class UninstallTests(unittest.TestCase):
                 self.assertIn("mode: subagent\n", frontmatter)
                 # Exact allowlist plus the deny-all rule excludes shell, edits, and subagents.
                 self.assertEqual(frontmatter.split("permissions:\n", 1)[1].splitlines(), expected_permissions)
+
+    def test_opencode_deep_review_doc_is_installed_and_removed(self):
+        doc = self.home / ".config/opencode/docs/deep-review.md"
+        self.assertEqual(doc.read_bytes(), (ROOT / "opencode/docs/deep-review.md").read_bytes())
+        policy = (self.home / ".config/opencode/AGENTS.md").read_text()
+        self.assertIn("~/.config/opencode/docs/deep-review.md", policy)
+        self.assertIn("`deep-inspector`", doc.read_text())
+        self.assertNotIn("model override", doc.read_text())
+        result = self.run_command("--tool", "opencode", "--uninstall")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(doc.exists())
+        self.assertTrue((self.home / ".claude/docs/opus-review.md").exists())
+
+    def test_opencode_agent_step_limits(self):
+        for agent, steps in (("runner", "15"), ("inspector", "60"), ("deep-inspector", "60"),
+                             ("consultant", "30")):
+            with self.subTest(agent=agent):
+                frontmatter = (self.home / f".config/opencode/agents/{agent}.md").read_text().split("---\n", 2)[1]
+                self.assertIn(f"steps: {steps}\n", frontmatter)
+        fixer = (self.home / ".config/opencode/agents/fixer.md").read_text().split("---\n", 2)[1]
+        self.assertNotIn("steps:", fixer)
+        agents = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())["agents"]
+        self.assertEqual(agents["explore"]["steps"], 40)
+        self.assertNotIn("steps", agents["general"])
+
+    def test_opencode_uses_only_deepseek_and_glm(self):
+        allowed = {"opencode-go/deepseek-v4.1-flash", "opencode-go/glm-5.3-flash"}
+        models = []
+        for agent in ("runner", "fixer", "inspector", "consultant", "deep-inspector"):
+            text = (self.home / f".config/opencode/agents/{agent}.md").read_text()
+            models.append(text.split("model: ", 1)[1].split("\n", 1)[0])
+        config = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())
+        models.extend(settings["model"] for settings in config["agents"].values())
+        self.assertEqual({model.split("#", 1)[0] for model in models}, allowed)
+        self.assertEqual(models[0], "opencode-go/deepseek-v4.1-flash#high")
+        self.assertEqual(models[1], "opencode-go/deepseek-v4.1-flash#max")
+        self.assertEqual(models[2], "opencode-go/glm-5.3-flash#high")
+        self.assertEqual(config["agents"]["explore"]["model"], "opencode-go/deepseek-v4.1-flash#high")
+
+    def test_opencode_two_model_upgrade_backs_up_muse_spark_files(self):
+        previous = json.loads((ROOT / "tests/fixtures/pre-two-model-opencode.json").read_text())
+        sources = {
+            ".config/opencode/agents/runner.md": "opencode/runner.md",
+            ".config/opencode/opencode.jsonc": "opencode/opencode.jsonc",
+            ".config/opencode/AGENTS.md": "opencode/AGENTS.md",
+            ".config/opencode/agents/inspector.md": "opencode/inspector.md",
+        }
+        for name, contents in previous.items():
+            (self.home / name).write_text(contents)
+        before = self.snapshot(self.home)
+
+        blocked = self.run_command("--tool", "opencode")
+        self.assertEqual(blocked.returncode, 1)
+        self.assertIn("--update", blocked.stderr)
+        self.assertEqual(self.snapshot(self.home), before)
+
+        updated = self.run_command("--tool", "opencode", "--update")
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        for name, contents in previous.items():
+            installed = self.home / name
+            self.assertEqual(installed.read_bytes(), (ROOT / sources[name]).read_bytes())
+            backups = list(installed.parent.glob(installed.name + ".bak-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_text(), contents)
 
     def test_customized_opencode_consultant_blocks_upgrade_without_mutation(self):
         previous = json.loads((ROOT / "tests/fixtures/pre-consultant-opencode.json").read_text())
@@ -869,7 +934,7 @@ class UninstallTests(unittest.TestCase):
         self.assertIn("Install scope", output)
         self.assertIn("Selected: all", output)
         self.assertGreaterEqual(output.count("●"), len(("codex", "claude", "opencode", "grok")) + 1)
-        self.assertEqual(len(self.installed_relative_paths(home)), 25)
+        self.assertEqual(len(self.installed_relative_paths(home)), 27)
 
     def test_interactive_update_confirms_the_highlighted_scope(self):
         before = {path: path.read_bytes() for path in self.installed_files}
@@ -894,8 +959,10 @@ class UninstallTests(unittest.TestCase):
                 ".config/opencode/agents/fixer.md",
                 ".config/opencode/agents/inspector.md",
                 ".config/opencode/agents/consultant.md",
+                ".config/opencode/agents/deep-inspector.md",
                 ".config/opencode/opencode.jsonc",
                 ".config/opencode/AGENTS.md",
+                ".config/opencode/docs/deep-review.md",
             },
         )
 
@@ -945,7 +1012,7 @@ class UninstallTests(unittest.TestCase):
         )
         self.assertEqual(returncode, 0, output)
         self.assertIn("Selected: all", output)
-        self.assertEqual(len(self.installed_relative_paths(home)), 25)
+        self.assertEqual(len(self.installed_relative_paths(home)), 27)
 
     def test_interactive_cancel_is_red_and_changes_nothing(self):
         home = self.fresh_home("interactive-cancel")

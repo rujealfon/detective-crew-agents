@@ -32,6 +32,10 @@ and final verification in the primary agent.
 - Verify returned work and review findings. Resolve scope dependencies and missing
   context before continuing dependent work; fix confirmed defects and rerun the
   affected checks.
+- Any open question, clarification, or decision you raise, whether a subagent
+  reporting to the primary or the primary asking the user, includes a recommended
+  answer and a one-line reason. Ask without a recommendation only when you have
+  no basis for one.
 
 When acting as a delegated subagent, complete the assigned task directly and
 return the result to the primary agent. Leave integration, commits, and further
