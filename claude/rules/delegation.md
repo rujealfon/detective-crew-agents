@@ -85,6 +85,10 @@ fixes that make no claim about code, are small tasks.
   did not verify. Do not restart it.
   Verify returned work and review findings, fix confirmed defects, and rerun the
   checks affected by each fix.
+- Any open question, clarification, or decision you raise, whether a subagent
+  reporting to the primary or the primary asking the user, includes a recommended
+  answer and a one-line reason. Ask without a recommendation only when you have
+  no basis for one.
 
 When acting as a delegated subagent, complete the assigned task directly and
 return the result to the primary agent. Leave further delegation to the primary.

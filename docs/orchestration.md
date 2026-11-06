@@ -46,6 +46,12 @@ a bug, it also identifies the likely cause, evidence for and against it, and the
 cheapest check that would confirm it. The primary agent resolves open questions
 and decides the approach before assigning dependent implementation.
 
+All four policies share one rule for questions. A subagent that returns an open
+question, clarification, or decision to the primary agent, and a primary agent that
+asks the user, includes a recommended answer and a one-line reason. It asks without
+one only when it has no basis for a recommendation. The rule is global; project
+conventions that sharpen the recommendation belong in the project's own `AGENTS.md`.
+
 Tracker gathers and traces evidence; Consultant uses that evidence to evaluate
 an uncertain approach. Inspector reviews the implemented change against its
 requirements. An inspector finding may expose a design question that the primary

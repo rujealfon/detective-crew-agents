@@ -20,6 +20,9 @@ integration, and final verification in the primary agent. Respect requests to wo
   encryption, migrations, and data integrity. Give multiple reviewers distinct scopes.
 - Workers run focused checks; the primary runs repository-wide checks. Reuse evidence
   unless later changes or unresolved concerns invalidate it. Resolve confirmed findings.
+- Any open question, clarification, or decision raised, by a subagent to the primary
+  or by the primary to the user, includes a recommended answer and a one-line reason;
+  ask without one only when there is no basis.
 - Subagents complete their assignment directly; leave further delegation and
   integration to the primary. Return evidence and missing context rather than expanding scope.
 
