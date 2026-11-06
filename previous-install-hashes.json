@@ -183,7 +183,8 @@
     "bc0d3c053e0ec13475d561b5ab755eecd58d8cb061a30f528ccc7e53f730753c"
   ],
   ".config/opencode/agents/fixer.md": [
-    "83ba6161ba910e0723a5a518cef7dae2f4f3478a11b7eed8ea85b1626437daca"
+    "83ba6161ba910e0723a5a518cef7dae2f4f3478a11b7eed8ea85b1626437daca",
+    "a8ba05d14afa236e0a3eeea312404a998d5df2c1301138fad6b78af8e0bd3624"
   ],
   ".grok/agents/runner.md": [
     "e56c9156910c246ade4dc661c9bee0e8e3b80899008b3ff7368370b9906329e1"
@@ -224,5 +225,8 @@
   ],
   ".codex/agents/fixer.toml": [
     "b3651da06b8c7dd6816c2b57ab41d53095b236346e06f5245e1a1b5327b38ceb"
+  ],
+  ".config/opencode/agents/consultant.md": [
+    "414568edba511683d22e06f9574e8ecacba06b7fd05c940059f11a41480e24e3"
   ]
 }

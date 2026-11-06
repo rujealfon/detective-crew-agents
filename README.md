@@ -32,7 +32,8 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/glm-5.3-flash`, high | `opencode-go/glm-5.3-flash`, max | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
 | Grok Build | `grok-4.7`, low | `grok-4.7`, medium | `grok-4.7`, high | `grok-4.7`, xhigh | N/A | N/A | N/A | N/A |
 
-N/A means the tool doesn't get that role. Codex leaves effort to the Chief at
+N/A means the tool doesn't get that role. OpenCode's `deep-inspector`, used only
+for the riskiest diffs, runs `opencode-go/glm-5.3-flash` at max. Codex leaves effort to the Chief at
 spawn time, so its row lists models only. `default` (Codex) and `general`
 (OpenCode) handle mixed work; `explore` (OpenCode) traces code.
 
@@ -88,20 +89,23 @@ Chief picks it for each task when spawning.
 
 | Agent | Assignment | Configuration |
 | --- | --- | --- |
-| `runner` | Bounded factual lookup or file discovery | DeepSeek V4.1 Flash, high; inherited permissions |
+| `runner` | Bounded factual lookup or file discovery | DeepSeek V4.1 Flash, high; max 15 steps; inherited permissions |
 | `fixer` | Implement an agreed change and verify it | DeepSeek V4.1 Flash, max; inherited permissions |
-| `inspector` | Review a supplied diff for concrete defects | GLM-5.3-Flash, high; inspection tools |
-| `consultant` | Advise on unresolved design choices and stubborn bugs | GLM-5.3-Flash, max; inspection tools |
+| `inspector` | Review a supplied diff for concrete defects | GLM-5.3-Flash, high; max 60 steps; inspection tools |
+| `consultant` | Advise on architecture, design trade-offs, and stubborn bugs | GLM-5.3-Flash, max; max 30 steps; inspection tools |
+| `deep-inspector` | One extra review of the riskiest settled diffs | GLM-5.3-Flash, max; max 60 steps; inspection tools |
 | `explore` | Trace behavior and dependencies across files | DeepSeek V4.1 Flash, high; built-in exploration permissions |
 | `general` | Mixed investigation and implementation | DeepSeek V4.1 Flash, max; built-in general permissions |
 
-Inspector and Consultant can only read, search, and fetch. `explore` and
+Inspector, Deep Inspector, and Consultant can only read, search, and fetch. `explore` and
 `general` are OpenCode's built-in agents with this setup's models.
 
 OpenCode uses only two models. DeepSeek V4.1 Flash does the lookups and
 implementation, and GLM-5.3-Flash reviews and advises, so Inspector never
-reviews code written by its own model. High-risk changes also get one deeper
-review from Consultant on the final diff.
+reviews code written by its own model. High-risk changes always get an
+Inspector review. The riskiest also get one review from `deep-inspector`, Inspector's prompt at max effort;
+[opencode/docs/deep-review.md](opencode/docs/deep-review.md) lists which changes
+qualify and the steps.
 
 ### Grok orchestration
 

@@ -35,6 +35,9 @@ detective-crew-agents/
 ├── opencode/
 │   ├── AGENTS.md
 │   ├── consultant.md
+│   ├── deep-inspector.md
+│   ├── docs/
+│   │   └── deep-review.md
 │   ├── fixer.md
 │   ├── inspector.md
 │   ├── opencode.jsonc
@@ -53,6 +56,7 @@ detective-crew-agents/
 │   │   ├── pre-consultant-opencode.json
 │   │   ├── pre-detective-install.json
 │   │   ├── pre-revert-chief-inspector.json
+│   │   ├── pre-two-model-opencode.json
 │   │   └── shared-delegation.md
 │   ├── test_session_usage.py
 │   └── test_uninstall.py
@@ -71,12 +75,13 @@ detective-crew-agents/
 | `codex/*.toml` | Codex agent definitions |
 | `codex/docs/token-usage.md` | Installable context, delegation effort, and usage guidance |
 | `claude/*.md` | Claude Code agent definitions |
-| `opencode/{runner,fixer,inspector,consultant}.md` | OpenCode v2 agent definitions |
+| `opencode/{runner,fixer,inspector,consultant,deep-inspector}.md` | OpenCode v2 agent definitions |
 | `opencode/opencode.jsonc` | OpenCode v2 built-in `explore` and `general` model and description overrides |
 | `grok/*.md` | Grok Build agent definitions |
 | `codex/AGENTS.md`, `opencode/AGENTS.md` | Provider-specific global delegation instructions |
 | `claude/rules/delegation.md`, `grok/rules/delegation.md` | Provider-specific global delegation rules |
 | `claude/docs/opus-review.md` | Claude's Opus review types and steps, reached from its delegation rule |
+| `opencode/docs/deep-review.md` | OpenCode's deep-review types and steps, reached from its `AGENTS.md` |
 | `docs/*.md` | Detailed orchestration, install, repository, and usage-report docs |
 | `assets/detective-crew/` | Crew poster and portraits used in the README |
 | `package.json` | npm package `@rujealfon/detective-crew-agents` |

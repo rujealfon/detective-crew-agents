@@ -14,8 +14,8 @@ How each tool delegates to the [Detective Crew](../README.md#meet-the-detective-
 - `general` is OpenCode's built-in subagent for bounded mixed investigation and implementation when no specialist fits. Prefer Fixer for a defined change and Explore for tracing.
 
 N/A means this setup does not provide that role for the tool. The model table
-shows configured defaults; Claude Inspector escalates to Opus for the riskiest
-change types, as described below.
+shows configured defaults; for the riskiest change types, Claude Inspector
+escalates to Opus and OpenCode adds a `deep-inspector` review, as described below.
 
 Each provider has its own delegation policy. Those policies route deeper
 investigation to Codex `tracker`, OpenCode
@@ -122,7 +122,7 @@ instructions that these roles and the built-ins do not cover.
 
 ## OpenCode orchestration
 
-The six roles combine four custom agents with the built-in `explore` and `general`
+The seven roles combine five custom agents with the built-in `explore` and `general`
 subagents. Keep coordination, decisions, integration, and final verification in
 the primary agent.
 
@@ -131,20 +131,38 @@ The role table lives in the [README](../README.md#opencode-orchestration).
 Follow the [consultation and handoff guidance](#consultation-and-handoffs), using
 `explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1 Flash
 runs Runner and `explore` at high, and Fixer and `general` at max. GLM-5.3-Flash
-runs Inspector at high and Consultant at max, so reviews always come from a
-different model than the one that wrote the code. For high-risk changes the
-primary agent also asks Consultant for one deeper review of the final diff.
-Consultant gets the diff, baseline, requirements, and test results without
-Inspector's findings, so it reviews independently. The primary agent reconciles
-both reviews. Watch GLM-5.3-Flash usage in the console: if regular reviews near
-its weekly allowance, move Inspector back to DeepSeek. Revisit the split based on the quality
+runs Inspector at high, and Consultant and `deep-inspector` at max, so reviews always come from a
+different model than the one that wrote the code. Watch GLM-5.3-Flash usage in the console: if regular reviews near
+its weekly allowance, move Inspector back to DeepSeek; `deep-inspector` and
+Consultant stay on GLM and also draw on that allowance. Revisit the split based on the quality
 of findings and recommendations on your projects.
 
-Inspector and Consultant deny all permissions, then allow only `read`,
+The OpenCode policy mirrors the [Claude orchestration](#claude-orchestration)
+rules: it plans and delegates non-trivial changes, consults before recommending on
+architecture or design questions, scopes each fixer's checks to its owned files,
+and has the primary agent run full suites once after integration. High-risk
+changes always get a review from the default Inspector. For the riskiest of them,
+the deep-review types, the primary agent also runs `deep-inspector` once on the
+settled diff, without asking first and without passing the earlier findings.
+OpenCode's documented `subagent` tool takes no per-call model or effort override,
+so `deep-inspector` is a separate agent: Inspector's prompt and permissions on
+GLM-5.3-Flash at max with a 60-step limit. Its description limits it to this
+review.
+[opencode/docs/deep-review.md](../opencode/docs/deep-review.md) lists the types and
+steps. They match Claude's Opus types, plus secrets, CI/CD, or infrastructure
+changes and new paths for untrusted input. The policy names the types and points there, so the steps load only when a
+diff needs them. When a subagent returns partial results, the primary agent
+continues it through its `sessionID` instead of starting over.
+
+Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60, 60, and 30. On the
+last step OpenCode removes tools and asks the agent to summarize, so a long task
+still ends with a report. Fixer has no step limit.
+
+Inspector, Deep Inspector, and Consultant deny all permissions, then allow only `read`,
 `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and further
 subagents stay denied. Supply relevant command output with their assignments and
-run validation through the primary agent or Fixer. All roles keep their configured
-model variants. Runner uses inspection operations by instruction but inherits
+run validation through the primary agent or Fixer. Every role, including
+`deep-inspector`, runs on its configured model and variant. Runner uses inspection operations by instruction but inherits
 permissions; its prompt is not a permission boundary.
 
 The `explore` and `general` overrides set only model and description, retaining
