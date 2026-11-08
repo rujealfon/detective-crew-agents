@@ -1,43 +1,60 @@
 # Orchestration details
 
-How each tool delegates to the [Detective Crew](../README.md#meet-the-detective-crew): handoffs, permissions, effort levels, and the fixer benchmark.
+How each tool delegates to the [Detective
+Crew](../README.md#meet-the-detective-crew): handoffs, permissions, effort
+levels, and the fixer benchmark.
 
 ## Roles at a glance
 
 - `runner` performs simple lookups, targeted searches, and mechanical checks.
-- `fixer` implements defined changes within clear file ownership and verifies the affected behavior.
-- `inspector` independently assesses correctness, regressions, security issues, and missing validation with read-only tools.
-- `consultant` (all four providers) advises on architecture, design trade-offs, and stubborn bugs with inspection tools. It uses Astra in Codex, Opus at high effort in Claude Code, GLM-5.3-Flash at max in OpenCode, and Grok 4.7 at xhigh in Grok Build; the primary agent stays on your main model. See [consultation and handoffs](#consultation-and-handoffs) for when to call it.
-- `tracker` (Codex only) traces behavior, dependencies, and likely causes across files without editing code.
-- `default` is Codex's subagent for bounded mixed investigation and implementation when no specialist fits. Prefer Fixer for a defined change and Tracker for tracing.
-- `explore` is OpenCode's built-in subagent for tracing behavior, dependencies, and likely causes without code edits. Prefer Runner for bounded factual lookups.
-- `general` is OpenCode's built-in subagent for bounded mixed investigation and implementation when no specialist fits. Prefer Fixer for a defined change and Explore for tracing.
+- `fixer` implements defined changes within clear file ownership and verifies
+  the affected behavior.
+- `inspector` independently assesses correctness, regressions, security issues,
+  and missing validation with read-only tools.
+- `consultant` (all four providers) advises on architecture, design trade-offs,
+  and stubborn bugs with inspection tools. It uses Astra in Codex, Opus at high
+  effort in Claude Code, GLM-5.3-Flash at max in OpenCode, and Grok 4.7 at xhigh
+  in Grok Build; the primary agent stays on your main model. See [consultation
+  and handoffs](#consultation-and-handoffs) for when to call it.
+- `tracker` (Codex only) traces behavior, dependencies, and likely causes across
+  files without editing code.
+- `default` is Codex's subagent for bounded mixed investigation and
+  implementation when no specialist fits. Prefer Fixer for a defined change and
+  Tracker for tracing.
+- `explore` is OpenCode's built-in subagent for tracing behavior, dependencies,
+  and likely causes without code edits. Prefer Runner for bounded factual
+  lookups.
+- `general` is OpenCode's built-in subagent for bounded mixed investigation and
+  implementation when no specialist fits. Prefer Fixer for a defined change and
+  Explore for tracing.
 
 N/A means this setup does not provide that role for the tool. The model table
 shows configured defaults; for the riskiest change types, Claude Inspector
-escalates to Opus and OpenCode adds a `deep-inspector` review, as described below.
+escalates to Opus and OpenCode adds a `deep-inspector` review, as described
+below.
 
 Each provider has its own delegation policy. Those policies route deeper
-investigation to Codex `tracker`, OpenCode
-`explore`, or Claude Code's built-in `Explore` when available. Mixed work goes
-to Codex `default`, OpenCode `general`, or Claude Code's built-in
-`general-purpose` when available. These Claude built-ins keep their own model
-settings; this setup configures only Claude's four custom roles.
-For tools without a matching specialist, the primary agent handles the work or
-splits it into scoped assignments for available agents.
+investigation to Codex `tracker`, OpenCode `explore`, or Claude Code's built-in
+`Explore` when available. Mixed work goes to Codex `default`, OpenCode
+`general`, or Claude Code's built-in `general-purpose` when available. These
+Claude built-ins keep their own model settings; this setup configures only
+Claude's four custom roles. For tools without a matching specialist, the primary
+agent handles the work or splits it into scoped assignments for available
+agents.
 
 ## Consultation and handoffs
 
 Use the stages the case needs: gather evidence → consult when needed → implement
-→ inspect. The primary agent handles small tasks directly and selects specialists
-when delegation improves speed or quality.
+→ inspect. The primary agent handles small tasks directly and selects
+specialists when delegation improves speed or quality.
 
 Call Consultant before dependent implementation when an architecture or design
-decision remains unresolved. Examples include choosing a module boundary, deciding
-where state should live, or comparing migration strategies with different risks.
-Architecture consultation can happen immediately; the two-attempt threshold
-applies to stubborn bugs. For those bugs, consult after two evidence-based attempts
-have failed, supplying each hypothesis, attempted fix, and observed result.
+decision remains unresolved. Examples include choosing a module boundary,
+deciding where state should live, or comparing migration strategies with
+different risks. Architecture consultation can happen immediately; the
+two-attempt threshold applies to stubborn bugs. For those bugs, consult after
+two evidence-based attempts have failed, supplying each hypothesis, attempted
+fix, and observed result.
 
 Give Consultant a specific decision or diagnostic question, relevant code and
 evidence, constraints, viable options, and previous attempts when applicable. It
@@ -47,10 +64,11 @@ cheapest check that would confirm it. The primary agent resolves open questions
 and decides the approach before assigning dependent implementation.
 
 All four policies share one rule for questions. A subagent that returns an open
-question, clarification, or decision to the primary agent, and a primary agent that
-asks the user, includes a recommended answer and a one-line reason. It asks without
-one only when it has no basis for a recommendation. The rule is global; project
-conventions that sharpen the recommendation belong in the project's own `AGENTS.md`.
+question, clarification, or decision to the primary agent, and a primary agent
+that asks the user, includes a recommended answer and a one-line reason. It asks
+without one only when it has no basis for a recommendation. The rule is global;
+project conventions that sharpen the recommendation belong in the project's own
+`AGENTS.md`.
 
 Tracker gathers and traces evidence; Consultant uses that evidence to evaluate
 an uncertain approach. Inspector reviews the implemented change against its
@@ -58,25 +76,28 @@ requirements. An inspector finding may expose a design question that the primary
 agent routes back to Consultant.
 
 Use the corresponding investigation role for each provider: Codex `tracker`,
-OpenCode `explore`, or Claude's built-in `Explore`. Grok delegates bounded lookups
-to Runner and keeps deeper tracing in the primary agent. Its Consultant advises on
-unresolved design choices; the primary agent makes the final decision.
+OpenCode `explore`, or Claude's built-in `Explore`. Grok delegates bounded
+lookups to Runner and keeps deeper tracing in the primary agent. Its Consultant
+advises on unresolved design choices; the primary agent makes the final
+decision.
 
 For example, a failing test with a clear cause can go directly to Fixer and then
 Inspector. A change with competing designs may need Tracker to map the current
 behavior, Consultant to compare options, Fixer to implement the chosen approach,
-and Inspector to review the combined diff. Give Fixer file ownership and acceptance
-criteria; give Inspector the baseline, diff, requirements, and validation results.
+and Inspector to review the combined diff. Give Fixer file ownership and
+acceptance criteria; give Inspector the baseline, diff, requirements, and
+validation results.
 
 ## Claude orchestration
 
 The four custom roles complement Claude's built-in agents. Keep coordination,
-scope decisions, integration, and final verification in the primary conversation.
+scope decisions, integration, and final verification in the primary
+conversation.
 
 The Claude role table lives in the [README](../README.md#claude-orchestration).
 
-Use only the stages the task needs. For a change that needs investigation, gather
-evidence first, then assign fixers distinct file ownership and acceptance
+Use only the stages the task needs. For a change that needs investigation,
+gather evidence first, then assign fixers distinct file ownership and acceptance
 criteria. Integrate their changes before reviewing the combined diff. Give the
 inspector the baseline, diff, requirements, and test output: its inspection-only
 tools cannot run git or tests. The primary agent validates findings, coordinates
@@ -91,121 +112,129 @@ limit, or returns no report, resume it with `SendMessage` and ask it to report
 now rather than restarting it. `Explore` and `Plan` cannot be resumed; start a
 new one.
 
-Fixers lint only their owned files with the repo's own linter, never run a test
-project that shares a database with another running fixer, and leave the full
-lint, type-check, and test suites to the primary agent, which runs them once
-after integration and never two test runs at once. This overrides a project's
-pre-handoff checks. A fixer that writes docs, ADRs, or API descriptions gets the
-implementing diff or file paths and checks each claim against that code. The
-policy also prefers the configured `inspector` over plugin reviewer agents, and
-tells agents to search with Grep and Glob and edit with Edit rather than shell
-`grep`/`find`, `sed -i`, or scripted replacement.
+Fixers lint only their owned files with the repo's own linter, run data-writing
+checks only against a disposable environment (reporting the check as not run
+when none is available), and leave the full lint, type-check, and test suites to
+the primary agent, which runs them once after integration and never two test
+runs at once. This overrides a project's pre-handoff checks. A fixer that writes
+docs, ADRs, or API descriptions gets the implementing diff or file paths and
+checks each claim against that code. The policy also prefers the configured
+`inspector` over plugin reviewer agents, and tells agents to search with Grep
+and Glob and edit with Edit rather than shell `grep`/`find`, `sed -i`, or
+scripted replacement.
 
-Explore and Plan skip CLAUDE.md, so include relevant project constraints in their
-assignments. Fixers retain inherited tools for project-specific workflows but
-cannot spawn further subagents through Agent. Runner, inspector, and consultant use explicit
-inspection tool lists, which also exclude shell, edits, and MCP tools. Send work
-requiring those tools to the primary agent or a suitably scoped fixer.
-The four custom agents have configured model and effort defaults. High-risk
-changes always get a review from the default Inspector. For the riskiest of them,
-the Opus types, the primary agent also runs one Opus Inspector review at medium
-effort without asking first. [claude/docs/opus-review.md](../claude/docs/opus-review.md)
-lists the Opus types and the review steps; the delegation rule names the types
-and points there, so the steps load only when a diff needs them. Approving a plan
-does not replace review. Other custom agents use their configured models.
+Explore and Plan skip CLAUDE.md, so include relevant project constraints in
+their assignments. Fixers retain inherited tools for project-specific workflows
+but cannot spawn further subagents through Agent. Runner, inspector, and
+consultant use explicit inspection tool lists, which also exclude shell, edits,
+and MCP tools. Send work requiring those tools to the primary agent or a
+suitably scoped fixer. The four custom agents have configured model and effort
+defaults. High-risk changes always get a review from the default Inspector. For
+the riskiest of them, the Opus types, the primary agent also runs one Opus
+Inspector review at high effort without asking first. The delegation rule
+([claude/rules/delegation.md](../claude/rules/delegation.md)) lists the Opus
+types and the four review steps (settled diff, no earlier findings, default
+inspector for fix diffs, report that it ran) right after the high-risk bullet.
+Approving a plan does not replace review. Other custom agents use their
+configured models.
 
-Claude's policy consults before recommending on architecture or design questions,
-including data models, APIs, integrations, and hard-to-reverse choices, except
-obvious answers and small lookups. It also consults after two failed bug-fix
-attempts. For non-trivial changes, meaning those that span more than one module or
-touch routing, guards, schema, or tests, the primary agent plans and delegates
-implementation. Include the instruction to leave further delegation to the primary
-agent when assigning Claude's built-in `general-purpose` agent.
+Claude's policy consults before recommending on architecture or design
+questions, including data models, APIs, integrations, and hard-to-reverse
+choices, except obvious answers and small lookups. It also consults after two
+failed bug-fix attempts. For non-trivial changes, meaning those that span more
+than one module or touch public interfaces, access checks, persisted data
+shapes, or tests, the primary agent plans and delegates implementation. Include
+the instruction to leave further delegation to the primary agent when assigning
+Claude's built-in `general-purpose` agent.
 
 Add another custom role only for a recurring task with distinct tools or
-instructions that these roles and the built-ins do not cover.
-[Claude routing and tools](https://code.claude.com/docs/en/sub-agents)
+instructions that these roles and the built-ins do not cover. [Claude routing
+and tools](https://code.claude.com/docs/en/sub-agents)
 
 ## OpenCode orchestration
 
-The seven roles combine five custom agents with the built-in `explore` and `general`
-subagents. Keep coordination, decisions, integration, and final verification in
-the primary agent.
+The seven roles combine five custom agents with the built-in `explore` and
+`general` subagents. Keep coordination, decisions, integration, and final
+verification in the primary agent.
 
 The role table lives in the [README](../README.md#opencode-orchestration).
 
-Follow the [consultation and handoff guidance](#consultation-and-handoffs), using
-`explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1 Flash
-runs Runner and `explore` at high, and Fixer and `general` at max. GLM-5.3-Flash
-runs Inspector at high, and Consultant and `deep-inspector` at max, so reviews always come from a
-different model than the one that wrote the code. Watch GLM-5.3-Flash usage in the console: if regular reviews near
-its weekly allowance, move Inspector back to DeepSeek; `deep-inspector` and
-Consultant stay on GLM and also draw on that allowance. Revisit the split based on the quality
-of findings and recommendations on your projects.
+Follow the [consultation and handoff guidance](#consultation-and-handoffs),
+using `explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1
+Flash runs Runner and `explore` at high, and Fixer and `general` at max.
+GLM-5.3-Flash runs Inspector at high, and Consultant and `deep-inspector` at
+max, so reviews always come from a different model than the one that wrote the
+code. Watch GLM-5.3-Flash usage in the console: if regular reviews near its
+weekly allowance, move Inspector back to DeepSeek; `deep-inspector` and
+Consultant stay on GLM and also draw on that allowance. Revisit the split based
+on the quality of findings and recommendations on your projects.
 
 The OpenCode policy mirrors the [Claude orchestration](#claude-orchestration)
-rules: it plans and delegates non-trivial changes, consults before recommending on
-architecture or design questions, scopes each fixer's checks to its owned files,
-and has the primary agent run full suites once after integration. High-risk
-changes always get a review from the default Inspector. For the riskiest of them,
-the deep-review types, the primary agent also runs `deep-inspector` once on the
-settled diff, without asking first and without passing the earlier findings.
-OpenCode's documented `subagent` tool takes no per-call model or effort override,
-so `deep-inspector` is a separate agent: Inspector's prompt and permissions on
-GLM-5.3-Flash at max with a 60-step limit. Its description limits it to this
-review.
-[opencode/docs/deep-review.md](../opencode/docs/deep-review.md) lists the types and
-steps. They match Claude's Opus types, plus secrets, CI/CD, or infrastructure
-changes and new paths for untrusted input. The policy names the types and points there, so the steps load only when a
-diff needs them. When a subagent returns partial results, the primary agent
+rules: it plans and delegates non-trivial changes, consults before recommending
+on architecture or design questions, scopes each fixer's checks to its owned
+files, and has the primary agent run full suites once after integration.
+High-risk changes always get a review from the default Inspector. For the
+riskiest of them, the deep-review types, the primary agent also runs
+`deep-inspector` once on the settled diff, without asking first and without
+passing the earlier findings, and reports that it ran and what it found.
+OpenCode's documented `subagent` tool takes no per-call model or effort
+override, so `deep-inspector` is a separate agent: Inspector's prompt and
+permissions on GLM-5.3-Flash at max with a 60-step limit. Its description limits
+it to this review. [opencode/AGENTS.md](../opencode/AGENTS.md) lists the types
+and the four steps right after the high-risk bullet. They match Claude's Opus
+types, plus secrets, CI/CD, or infrastructure changes and new paths for
+untrusted input. When a subagent returns partial results, the primary agent
 continues it through its `sessionID` instead of starting over.
 
-Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60, 60, and 30,
-and the `explore` override sets 40. On the last step OpenCode removes tools and
-asks the agent to summarize, so a long task still ends with a report; continuing
-the agent through its `sessionID` resets the allowance. Fixer and `general` have
-no step limit, so an edit is never cut off halfway.
+Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60,
+60, and 30, and the `explore` override sets 40. On the last step OpenCode
+removes tools and asks the agent to summarize, so a long task still ends with a
+report; continuing the agent through its `sessionID` resets the allowance. Fixer
+and `general` have no step limit, so an edit is never cut off halfway.
 
-Inspector, Deep Inspector, and Consultant deny all permissions, then allow only `read`,
-`glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and further
-subagents stay denied. Supply relevant command output with their assignments and
-run validation through the primary agent or Fixer. Every role, including
-`deep-inspector`, runs on its configured model and variant. Runner uses inspection operations by instruction but inherits
-permissions; its prompt is not a permission boundary.
+Inspector, Deep Inspector, and Consultant deny all permissions, then allow only
+`read`, `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and
+further subagents stay denied. Supply relevant command output with their
+assignments and run validation through the primary agent or Fixer. Every role,
+including `deep-inspector`, runs on its configured model and variant. Runner
+uses inspection operations by instruction but inherits permissions; its prompt
+is not a permission boundary.
 
 The `explore` and `general` overrides set only model, description, and for
-`explore` a step limit, retaining
-their built-in system prompts and permissions. Their assignments carry evidence,
-ownership, validation, and handoff requirements from the delegation policy.
-Further delegation stays with the primary agent; OpenCode's built-in `general`
-also blocks child delegation. Start a fresh OpenCode session after installing.
-[OpenCode V2 agents and permissions](https://opencode.ai/v2/docs/agents)
+`explore` a step limit, retaining their built-in system prompts and permissions.
+Their assignments carry evidence, ownership, validation, and handoff
+requirements from the delegation policy. Further delegation stays with the
+primary agent; OpenCode's built-in `general` also blocks child delegation. Start
+a fresh OpenCode session after installing. [OpenCode V2 agents and
+permissions](https://opencode.ai/v2/docs/agents)
 
 ## Grok orchestration
 
 The four custom agents use the same model with different reasoning efforts.
-Consultant reserves xhigh reasoning for unresolved architecture or design decisions
-and bugs that survive two evidence-based attempts; Inspector keeps high effort
-for independent review. The primary agent gathers any deeper tracing evidence,
-resolves recommendations, assigns implementation, and verifies the combined result.
+Consultant reserves xhigh reasoning for unresolved architecture or design
+decisions and bugs that survive two evidence-based attempts; Inspector keeps
+high effort for independent review. The primary agent gathers any deeper tracing
+evidence, resolves recommendations, assigns implementation, and verifies the
+combined result.
 
 The role table lives in the [README](../README.md#grok-orchestration).
 
-Follow the [consultation and handoff guidance](#consultation-and-handoffs). Supply
-Inspector and Consultant with relevant command output, since their capability mode
-excludes shell execution and edits. Runner uses inspection operations by instruction
-but inherits capabilities. All roles leave integration and further delegation to
-the primary agent. The installer preserves your main model and Grok settings.
-Start a fresh Grok session after installing.
-[Grok subagent configuration](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/16-subagents.md)
+Follow the [consultation and handoff guidance](#consultation-and-handoffs).
+Supply Inspector and Consultant with relevant command output, since their
+capability mode excludes shell execution and edits. Runner uses inspection
+operations by instruction but inherits capabilities. All roles leave integration
+and further delegation to the primary agent. The installer preserves your main
+model and Grok settings. Start a fresh Grok session after installing. [Grok
+subagent
+configuration](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/16-subagents.md)
 [Grok 4.7 reasoning efforts](https://docs.x.ai/developers/grok-4-7)
 
 ## Codex orchestration
 
 The six roles cover narrow lookup, codebase investigation, implementation,
 independent review, consultation, and mixed work. Keep coordination and final
-verification in the primary agent; these custom agents return their assigned work
-directly.
+verification in the primary agent; these custom agents return their assigned
+work directly.
 
 The role table lives in the [README](../README.md#codex-orchestration).
 
@@ -218,35 +247,39 @@ can still receive a scoped Inspector review.
 Prefer fresh, bounded assignments containing the relevant project instructions,
 requirements, and evidence. Keep responsibilities distinct when project rules
 require multiple reviews. Workers run focused checks; the primary agent owns
-repository-wide verification after integration and review fixes, repeating checks
-when later changes or unresolved concerns justify it.
+repository-wide verification after integration and review fixes, repeating
+checks when later changes or unresolved concerns justify it.
 
-Give each assignment its objective, relevant context, file ownership or read-only
-scope, acceptance criteria, and expected evidence. Gather any required investigation
-before starting fixers. Parallelize independent work with distinct file ownership,
-then integrate before reviewing the combined change. Supply inspectors with the
-baseline, requirements, and validation results. The primary agent verifies findings,
-coordinates fixes, and reruns affected checks. Use only the stages a task needs.
+Give each assignment its objective, relevant context, file ownership or
+read-only scope, acceptance criteria, and expected evidence. Gather any required
+investigation before starting fixers. Parallelize independent work with distinct
+file ownership, then integrate before reviewing the combined change. Supply
+inspectors with the baseline, requirements, and validation results. The primary
+agent verifies findings, coordinates fixes, and reruns affected checks. Use only
+the stages a task needs.
 
 Follow the [consultation and handoff guidance](#consultation-and-handoffs) when
 choosing between Fixer, Inspector, Consultant, and Tracker.
 
-Runner, tracker, inspector, and consultant are configured with `sandbox_mode = "read-only"`.
-Codex can reapply parent runtime permission overrides when spawning, so these are
-sandbox defaults rather than an unconditional guarantee. A filesystem sandbox also
-does not make external connector tools read-only. Their prompts require inspection
-operations across tools. An inspector can inspect git history or diffs through available
-read-only commands; send checks that need writes to the primary agent or a fixer.
+Runner, tracker, inspector, and consultant are configured with `sandbox_mode =
+"read-only"`. Codex can reapply parent runtime permission overrides when
+spawning, so these are sandbox defaults rather than an unconditional guarantee.
+A filesystem sandbox also does not make external connector tools read-only.
+Their prompts require inspection operations across tools. An inspector can
+inspect git history or diffs through available read-only commands; send checks
+that need writes to the primary agent or a fixer.
 
 Fixers and default agents retain inherited project tools. Further delegation is
 left to the primary agent by instruction, rather than a Claude-style Agent tool
 restriction. All six roles retain their configured models and omit fixed effort.
-An ambiguous task or weak result should return to the primary agent for a clearer
-assignment or different specialist, rather than spawning an additional hierarchy.
-[Codex agent configuration and permissions](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+An ambiguous task or weak result should return to the primary agent for a
+clearer assignment or different specialist, rather than spawning an additional
+hierarchy. [Codex agent configuration and
+permissions](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 
-Edit the provider-specific policies listed below to change how each tool delegates
-work; the Codex policy defaults to solo implementation for cohesive tasks.
+Edit the provider-specific policies listed below to change how each tool
+delegates work; the Codex policy defaults to solo implementation for cohesive
+tasks.
 
 These definitions configure subagents. Select your daily main model separately
 in the tool's model selector or settings. The installer does not set the main
@@ -254,8 +287,8 @@ model, main effort, or default primary agent. The Codex `default` definition is
 a subagent role.
 
 Codex agent files omit `model_reasoning_effort` so the primary agent can select
-an effort when spawning each subagent. The Codex policy uses these task-selection
-targets, with escalation for more demanding work:
+an effort when spawning each subagent. The Codex policy uses these
+task-selection targets, with escalation for more demanding work:
 
 | Role | Usual effort | Escalation |
 | --- | --- | --- |
@@ -269,12 +302,13 @@ The fixer trials GPT-6.1 Terra for defined changes, usually at medium effort.
 Keep Sol for the default and inspector roles, and Astra for consultation. Route
 complex implementation back to the primary agent for reassignment when Terra
 cannot complete it reliably. A role consumes tokens only when invoked. Compare
-uncached input, cached input, output, elapsed time, findings, and corrective work
-on matched tasks. Different-task token totals do not establish
-causal savings, and usage records are not a final bill.
+uncached input, cached input, output, elapsed time, findings, and corrective
+work on matched tasks. Different-task token totals do not establish causal
+savings, and usage records are not a final bill.
 
 Run a local comparison from this checkout with an authenticated Codex CLI (add
-`--provider claude` to compare Claude Code models with your Claude login instead):
+`--provider claude` to compare Claude Code models with your Claude login
+instead):
 
 ```sh
 python3 tools/benchmark-fixer.py --dry-run
@@ -294,58 +328,65 @@ python3 tools/benchmark-fixer.py --provider claude --limit 1
 python3 tools/benchmark-fixer.py --provider claude
 ```
 
-With `--provider claude` it compares Sonnet 5.5 and Opus 5.5 at medium effort
-on the same five regressions, using `claude -p` with the body of `claude/fixer.md`
+With `--provider claude` it compares Sonnet 5.5 and Opus 5.5 at medium effort on
+the same five regressions, using `claude -p` with the body of `claude/fixer.md`
 written to the workspace as `CLAUDE.md`. Claude Code has no workspace-write
-sandbox, so isolation relies on a temporary directory plus a restricted tool list
-(Read, Edit, Write, Glob, Grep, and python3 through Bash; Agent disallowed).
-Usage is taken from the final `result` event.
-[Initial Claude trial results](../benchmarks/sonnet-opus-2026-10-28.md).
+sandbox, so isolation relies on a temporary directory plus a restricted tool
+list (Read, Edit, Write, Glob, Grep, and python3 through Bash; Agent
+disallowed). Usage is taken from the final `result` event. [Initial Claude trial
+results](../benchmarks/sonnet-opus-2026-10-28.md).
 
 This is a repeatable smoke benchmark for scoped fixes. Use matched real project
 tasks and independent diff review before drawing broader quality conclusions.
-[Initial local trial results](../benchmarks/terra-sol-2026-10-28.md).
-[OpenAI model comparison guidance](https://learn.chatgpt.com/docs/model-selection)
+[Initial local trial results](../benchmarks/terra-sol-2026-10-28.md). [OpenAI
+model comparison guidance](https://learn.chatgpt.com/docs/model-selection)
 
-Use effort levels supported by the selected model.
-This is a choice made at spawn time. Omitting the field alone uses Codex's
-resolved default or inherited effort; it does not enable automatic task-based
-selection. Custom agent files that explicitly set effort override spawn settings.
-[Codex subagent settings](https://learn.chatgpt.com/docs/agent-configuration/subagents)
+Use effort levels supported by the selected model. This is a choice made at
+spawn time. Omitting the field alone uses Codex's resolved default or inherited
+effort; it does not enable automatic task-based selection. Custom agent files
+that explicitly set effort override spawn settings. [Codex subagent
+settings](https://learn.chatgpt.com/docs/agent-configuration/subagents)
 
-For existing installations, run `npx @rujealfon/detective-crew-agents --update` to replace
-the earlier definitions and delegation policy with backups. The installer leaves
-`~/.codex/config.toml` unchanged. If you want the model default as the fallback
-when no effort is selected at spawn time, omit
-`default_subagent_reasoning_effort` from its `[agents]` table. For the recommended
-medium fallback, set it to `"medium"`. Explicit spawn effort takes precedence over
-that global default either way. Routine reviews start at medium; state a concrete
-reason when escalating effort. See the installable
-[context and token-use reference](../codex/docs/token-usage.md) for matched-task
-measurement. Session handoffs and skill reuse are covered in the Codex policy.
+For existing installations, run `npx @rujealfon/detective-crew-agents --update`
+to replace the earlier definitions and delegation policy with backups. The
+installer leaves `~/.codex/config.toml` unchanged. If you want the model default
+as the fallback when no effort is selected at spawn time, omit
+`default_subagent_reasoning_effort` from its `[agents]` table. For the
+recommended medium fallback, set it to `"medium"`. Explicit spawn effort takes
+precedence over that global default either way. Routine reviews start at medium;
+state a concrete reason when escalating effort. A settled diff that touches the
+high-risk types (migrations, auth, tenant isolation, payment or financial
+records, how audit entries or sensitive data are written or revealed, or data
+deletion) gets one fresh inspector (`fork_turns: "none"`, no earlier findings)
+at high effort before the PR, and the primary agent reports that it ran and what
+it found. See the installable [context and token-use
+reference](../codex/docs/token-usage.md) for matched-task measurement. Session
+handoffs and skill reuse are covered in the Codex policy.
 
-Claude agent files set a default `effort` in their frontmatter: medium for `runner`
-and `fixer`, and high for `inspector` and `consultant`. The delegation
-policy also asks the primary agent to pass a supported effort level through the
-Agent tool for each non-fork subagent invocation: low for simple lookups, medium
-for routine implementation, and high for complex investigation or review.
-`CLAUDE_CODE_EFFORT_LEVEL`, if set, overrides per-invocation choices.
-Unset that environment variable to let the primary agent choose effort.
-The installer leaves Claude settings and shell environment variables unchanged.
-Restart Claude Code after updating to load the new agent definitions.
-[Claude subagent effort](https://code.claude.com/docs/en/sub-agents#choose-an-effort-level)
+Claude agent files set a default `effort` in their frontmatter: low for
+`runner`, medium for `fixer`, and high for `inspector` and `consultant`. The
+delegation policy also asks the primary agent to pass a supported effort level
+through the Agent tool for each non-fork subagent invocation: low for simple
+lookups, medium for routine implementation, and high for complex investigation
+or review. `CLAUDE_CODE_EFFORT_LEVEL`, if set, overrides per-invocation choices.
+Unset that environment variable to let the primary agent choose effort. The
+installer leaves Claude settings and shell environment variables unchanged.
+Restart Claude Code after updating to load the new agent definitions. [Claude
+subagent
+effort](https://code.claude.com/docs/en/sub-agents#choose-an-effort-level)
 
 Claude uses explicit `claude-haiku-5-5`, `claude-sonnet-5-5`, and
-`claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` provider and encodes
-effort as a model variant, such as `#medium`, `#high`, or `#max`. Access to these
-models and variants depends on your account and provider. Check that they are available
-before using the agents. OpenCode Go blocks DeepSeek until the workspace allows
-the Global region; see [install](install.md). [Claude models](https://platform.claude.com/docs/en/models/overview),
-[OpenAI models](https://developers.openai.com/api/docs/models), and
-[OpenCode model variants](https://opencode.ai/v2/docs/models#variants).
+`claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` provider and
+encodes effort as a model variant, such as `#medium`, `#high`, or `#max`. Access
+to these models and variants depends on your account and provider. Check that
+they are available before using the agents. OpenCode Go blocks DeepSeek until
+the workspace allows the Global region; see [install](install.md). [Claude
+models](https://platform.claude.com/docs/en/models/overview), [OpenAI
+models](https://developers.openai.com/api/docs/models), and [OpenCode model
+variants](https://opencode.ai/v2/docs/models#variants).
 
 Grok Build uses `grok-4.7` for all four native agents, with low effort for
 `runner`, medium for `fixer`, high for `inspector`, and xhigh for `consultant`.
 Inspector and Consultant set `capabilityMode: read-only`, which excludes file
-edits and shell execution. These fields follow the
-[Grok agent schema](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-agent/src/config.rs).
+edits and shell execution. These fields follow the [Grok agent
+schema](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-agent/src/config.rs).

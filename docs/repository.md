@@ -25,8 +25,6 @@ detective-crew-agents/
 │   └── tracker.toml
 ├── claude/
 │   ├── consultant.md
-│   ├── docs/
-│   │   └── opus-review.md
 │   ├── fixer.md
 │   ├── inspector.md
 │   ├── runner.md
@@ -36,8 +34,6 @@ detective-crew-agents/
 │   ├── AGENTS.md
 │   ├── consultant.md
 │   ├── deep-inspector.md
-│   ├── docs/
-│   │   └── deep-review.md
 │   ├── fixer.md
 │   ├── inspector.md
 │   ├── opencode.jsonc
@@ -62,6 +58,8 @@ detective-crew-agents/
 │   └── test_uninstall.py
 ├── tools/
 │   └── session-usage.py
+├── AGENTS.md
+├── CLAUDE.md
 ├── install-agents.py
 ├── install-claude-opencode.py
 ├── package.json
@@ -80,10 +78,10 @@ detective-crew-agents/
 | `grok/*.md` | Grok Build agent definitions |
 | `codex/AGENTS.md`, `opencode/AGENTS.md` | Provider-specific global delegation instructions |
 | `claude/rules/delegation.md`, `grok/rules/delegation.md` | Provider-specific global delegation rules |
-| `claude/docs/opus-review.md` | Claude's Opus review types and steps, reached from its delegation rule |
-| `opencode/docs/deep-review.md` | OpenCode's deep-review types and steps, reached from its `AGENTS.md` |
 | `docs/*.md` | Detailed orchestration, install, repository, and usage-report docs |
 | `assets/detective-crew/` | Crew poster and portraits used in the README |
+| `AGENTS.md` | Maintainer note for editing this repository; not installed or published |
+| `CLAUDE.md` | Imports `AGENTS.md` so Claude Code reads the maintainer note |
 | `package.json` | npm package `@rujealfon/detective-crew-agents` |
 | `bin/detective-crew-agents` | `npx` entry point that runs `install-agents.py` |
 | `install-agents.py` | Combined installer and uninstaller for all four tools, or a selected combination |

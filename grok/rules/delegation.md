@@ -29,6 +29,10 @@ and final verification in the primary agent.
 - Resolve required investigation and decisions before assigning dependent fixes.
   Integrate changes before reviewing the combined diff. Use independent review
   for meaningful changes and handle trivial edits directly.
+- Have fixers run data-writing checks only against disposable data (the repo's
+  documented test setup when it is neither shared nor persistent, or a scratch
+  database), never shared or persistent databases or one another running worker
+  uses; if none is available, report the check as not run.
 - Verify returned work and review findings. Resolve scope dependencies and missing
   context before continuing dependent work; fix confirmed defects and rerun the
   affected checks.
