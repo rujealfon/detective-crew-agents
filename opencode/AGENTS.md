@@ -15,7 +15,13 @@ small tasks.
 - Use the built-in `explore` agent for tracing behavior and dependencies across
   files without code edits. Require execution paths, evidence with file and
   symbol references, and a distinction between observed behavior and likely
-  causes.
+  causes. Size one `explore` to one topic cluster: multi-topic assignments hit
+  their step cap before their report, and each read cost is one step.
+- Size read-only work for one agent to finish: split multi-deliverable surveys
+  across parallel explores; hand reviewers a diff file in the repo, trimmed of
+  migration snapshots and copied prior-art test files by pathspec; and tell
+  any agent writing notes or a report to save each section as it finishes its
+  topic, so a step cap lands after saved output.
 - Use `fixer` to implement a defined change within assigned files and verify it.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation. Pass the diff or
@@ -125,4 +131,6 @@ changes nothing and reports success, while the edit tool fails loudly.
 
 In zsh, quote words that start with `=` (`echo '====='`), which zsh otherwise
 expands as a command path. Write temporary files to the system temporary
-directory, never to a relative path outside the repository.
+directory, never to a relative path outside the repository — except files a
+subagent must read, which belong inside the repository (subagents cannot read
+system temporary paths); delete them once read.
