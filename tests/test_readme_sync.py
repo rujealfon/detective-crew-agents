@@ -4,9 +4,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ("runner", "fixer", "inspector", "consultant")
-OPUS_DOC_SOURCE = "claude/docs/opus-review.md"
-OPUS_DOC_TARGET = ".claude/docs/opus-review.md"
-OPUS_DOC_POINTER = "~/.claude/docs/opus-review.md"
 
 
 def read(relative):
@@ -129,22 +126,12 @@ class ReadmeSyncTests(unittest.TestCase):
                 f"claude/{agent}.md expects it to start with {prefix!r}",
             )
 
-    def test_opus_review_doc_is_wired(self):
-        self.assertIn(
-            OPUS_DOC_POINTER, read("claude/rules/delegation.md"),
-            f"claude/rules/delegation.md no longer mentions {OPUS_DOC_POINTER}",
-        )
-        self.assertTrue((ROOT / OPUS_DOC_SOURCE).is_file(), f"{OPUS_DOC_SOURCE} is missing")
-        self.assertIn(OPUS_DOC_SOURCE, read("README.md"), f"README.md no longer links {OPUS_DOC_SOURCE}")
-        installer = read("install-agents.py")
-        start = installer.index("files = [")
-        end = installer.index("\n    ]", start)
-        pairs = re.findall(r'\(\s*"([^"]+)",\s*"([^"]+)"\s*\),', installer[start:end])
-        self.assertGreater(len(pairs), 4, "install-agents.py: could not parse the files list")
-        self.assertIn(
-            (OPUS_DOC_SOURCE, OPUS_DOC_TARGET), pairs,
-            f"install-agents.py does not map {OPUS_DOC_SOURCE} to {OPUS_DOC_TARGET}",
-        )
+    def test_opus_review_is_inlined_in_delegation_policy(self):
+        policy = read("claude/rules/delegation.md")
+        self.assertIn('`model: "opus"`', policy)
+        self.assertRegex(policy, r"override at high\s+effort")
+        self.assertNotIn("opus-review.md", policy)
+        self.assertFalse((ROOT / "claude/docs/opus-review.md").exists())
 
 
 if __name__ == "__main__":

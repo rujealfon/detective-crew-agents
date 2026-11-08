@@ -208,7 +208,6 @@ def main():
         ("claude/inspector.md", ".claude/agents/inspector.md"),
         ("claude/consultant.md", ".claude/agents/consultant.md"),
         ("claude/rules/delegation.md", ".claude/rules/delegation.md"),
-        ("claude/docs/opus-review.md", ".claude/docs/opus-review.md"),
         ("opencode/runner.md", ".config/opencode/agents/runner.md"),
         ("opencode/fixer.md", ".config/opencode/agents/fixer.md"),
         ("opencode/inspector.md", ".config/opencode/agents/inspector.md"),
@@ -216,7 +215,6 @@ def main():
         ("opencode/deep-inspector.md", ".config/opencode/agents/deep-inspector.md"),
         ("opencode/opencode.jsonc", ".config/opencode/opencode.jsonc"),
         ("opencode/AGENTS.md", ".config/opencode/AGENTS.md"),
-        ("opencode/docs/deep-review.md", ".config/opencode/docs/deep-review.md"),
         ("grok/runner.md", ".grok/agents/runner.md"),
         ("grok/fixer.md", ".grok/agents/fixer.md"),
         ("grok/inspector.md", ".grok/agents/inspector.md"),
@@ -242,6 +240,8 @@ def main():
         ("claude", ".claude/agents/chief-inspector.md"),
         ("opencode", ".config/opencode/agents/chief-inspector.md"),
         ("grok", ".grok/agents/chief-inspector.md"),
+        ("claude", ".claude/docs/opus-review.md"),
+        ("opencode", ".config/opencode/docs/deep-review.md"),
     ]
     prompted = not args.tool and sys.stdin.isatty() and sys.stdout.isatty()
     selected = resolve_tools(parser, args)

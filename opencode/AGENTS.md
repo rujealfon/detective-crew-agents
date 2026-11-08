@@ -22,16 +22,29 @@ wording fixes that make no claim about code, are small tasks.
   review stays independent. Always review high-risk changes with the default
   inspector: renames that reach the schema or stored codes, removing routes or
   guards, anything without a rollback, and the deep-review types (migrations,
-  authentication or authorization, tenant isolation, payment, billing, or
-  financial records, changes to how audit entries are written but not features
-  that only add one, changes to how sensitive data is encrypted, masked, or
-  revealed or new paths that could leak it, secrets, CI/CD, or infrastructure,
-  new paths for untrusted input into SQL, shell or template construction,
-  deserialization, uploads, redirects, or server-side fetches, and data
-  deletion). When a diff touches a deep-review type, read
-  `~/.config/opencode/docs/deep-review.md` and run the `deep-inspector` review it
-  describes. Use `deep-inspector` for nothing else.
-  A user's approval of a plan does not replace review.
+  including squashing or rewriting history; authentication or authorization,
+  including sessions, tokens, and crypto; tenant isolation; payment, billing, or
+  financial records, such as balances, fund allocations, and closed-period locks;
+  changes to how audit entries are written or which fields they record, but not
+  features that only add one; changes to how sensitive or personal data is
+  encrypted, masked, or revealed, or new paths that could copy it into logs,
+  errors, or audit entries; secrets, CI/CD, or infrastructure; new or changed
+  paths for untrusted input into SQL, shell or template construction,
+  deserialization, uploads, redirects, or server-side fetches of user-supplied
+  URLs; and data deletion). When a diff touches a deep-review type, also run a
+  deep review once; when it matches none of them, skip it:
+  1. Use the default inspector while iterating, so the deeper pass sees only the
+     settled diff.
+  2. On the settled diff before the PR or final handoff, without asking the user,
+     launch `deep-inspector`, which runs inspector's review at max effort.
+  3. Give it the diff, baseline, requirements, and check results, but not the
+     earlier inspector's findings, so it reviews independently.
+  4. Fix confirmed findings and review the fix diff with the default inspector.
+     Rerun the deep review only if the fix itself touches a deep-review type.
+  5. Report in your summary that the deep review ran and what it found.
+
+  Use `deep-inspector` for nothing else. A user's approval of a plan does not
+  replace review.
 - Use `consultant` before recommending on any architecture or design question: a
   choice between viable options, a data model, API, or integration decision, or a
   change that is hard to reverse, such as rewriting migration history or renaming

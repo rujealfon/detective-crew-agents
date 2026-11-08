@@ -26,11 +26,11 @@ Installed paths are unchanged. Run `npx @rujealfon/detective-crew-agents --updat
 recognized shared policies with the provider-specific versions and retain backups.
 Customized instructions still stop the update before any files are changed.
 
-Claude's Opus review steps install into `~/.claude/docs/opus-review.md`, outside
-`~/.claude/rules/`, so they load only when the delegation rule points to them.
-OpenCode's deep-review steps install into `~/.config/opencode/docs/deep-review.md`
-for the same reason: OpenCode always loads `AGENTS.md`, but reads the doc only
-when the policy points to it.
+Claude's Opus review and OpenCode's deep review steps now live inside their
+delegation policies (`~/.claude/rules/delegation.md` and
+`~/.config/opencode/AGENTS.md`). The separate `opus-review.md` and
+`deep-review.md` docs from earlier releases are retired: `--update` backs up and
+removes unmodified copies, and `--uninstall` removes them.
 
 Agent definitions install into `~/.codex/agents/`, `~/.claude/agents/`,
 `~/.config/opencode/agents/`, and `~/.grok/agents/`, respectively. OpenCode's
