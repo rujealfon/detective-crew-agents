@@ -133,6 +133,20 @@ class ReadmeSyncTests(unittest.TestCase):
         self.assertNotIn("opus-review.md", policy)
         self.assertFalse((ROOT / "claude/docs/opus-review.md").exists())
 
+    def test_policies_stay_project_agnostic(self):
+        forbidden = re.compile(
+            r"\b(pnpm|yarn|npm (run|test)|test:guards)\b|root `test/`", re.IGNORECASE
+        )
+        for name in (
+            "claude/rules/delegation.md",
+            "opencode/AGENTS.md",
+            "codex/AGENTS.md",
+            "grok/rules/delegation.md",
+        ):
+            match = forbidden.search(read(name))
+            found = match.group(0) if match else None
+            self.assertIsNone(match, f"{name} mentions repo-specific {found!r}")
+
 
 if __name__ == "__main__":
     unittest.main()

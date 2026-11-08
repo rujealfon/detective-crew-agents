@@ -58,6 +58,8 @@ detective-crew-agents/
 │   └── test_uninstall.py
 ├── tools/
 │   └── session-usage.py
+├── AGENTS.md
+├── CLAUDE.md
 ├── install-agents.py
 ├── install-claude-opencode.py
 ├── package.json
@@ -78,6 +80,8 @@ detective-crew-agents/
 | `claude/rules/delegation.md`, `grok/rules/delegation.md` | Provider-specific global delegation rules |
 | `docs/*.md` | Detailed orchestration, install, repository, and usage-report docs |
 | `assets/detective-crew/` | Crew poster and portraits used in the README |
+| `AGENTS.md` | Maintainer note for editing this repository; not installed or published |
+| `CLAUDE.md` | Imports `AGENTS.md` so Claude Code reads the maintainer note |
 | `package.json` | npm package `@rujealfon/detective-crew-agents` |
 | `bin/detective-crew-agents` | `npx` entry point that runs `install-agents.py` |
 | `install-agents.py` | Combined installer and uninstaller for all four tools, or a selected combination |

@@ -7,8 +7,9 @@ improves speed or quality. Handle small tasks directly and keep orchestration,
 scope and design decisions, integration, and final verification in the primary
 agent. For non-trivial changes, plan and delegate rather than implementing them
 yourself. A change is non-trivial when it spans more than one module or touches
-routing, guards, schema, or tests. Short wording edits the user dictates, and
-wording fixes that make no claim about code, are small tasks.
+public interfaces, access checks, persisted data shapes, or tests. Short wording
+edits the user dictates, and wording fixes that make no claim about code, are
+small tasks.
 
 - Use `runner` for bounded lookups, file discovery, and factual checks.
 - Use the built-in `explore` agent for tracing behavior and dependencies across
@@ -19,32 +20,31 @@ wording fixes that make no claim about code, are small tasks.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation. Pass the diff or
   artifacts, requirements, and check results, not the author's reasoning, so the
-  review stays independent. Always review high-risk changes with the default
-  inspector: renames that reach the schema or stored codes, removing routes or
-  guards, anything without a rollback, and the deep-review types (migrations,
-  including squashing or rewriting history; authentication or authorization,
-  including sessions, tokens, and crypto; tenant isolation; payment, billing, or
-  financial records, such as balances or closed periods;
-  changes to how audit entries are written or which fields they record, but not
-  features that only add one; changes to how sensitive or personal data is
-  encrypted, masked, or revealed, or new paths that could copy it into logs,
-  errors, or audit entries; secrets, CI/CD, or infrastructure; new or changed
-  paths for untrusted input into SQL, shell or template construction,
+  review stays independent.
+- Always review high-risk changes with the default inspector: renames that reach
+  persisted names or codes, removing endpoints or access checks, anything
+  without a rollback, and the deep-review types. A user's approval of a plan
+  does not replace review.
+- Deep-review types: migrations, including squashing or rewriting history;
+  authentication or authorization, including sessions, tokens, and crypto;
+  tenant isolation; payment, billing, or financial records, such as balances or
+  closed periods; changes to how audit entries are written or which fields they
+  record, but not features that only add one; changes to how sensitive or
+  personal data is encrypted, masked, or revealed, or new paths that could copy
+  it into logs, errors, or audit entries; secrets, CI/CD, or infrastructure; new
+  or changed paths for untrusted input into SQL, shell or template construction,
   deserialization, uploads, redirects, or server-side fetches of user-supplied
-  URLs; and data deletion). When a diff touches a deep-review type, also run a
-  deep review once; when it matches none of them, skip it:
-  1. Use the default inspector while iterating, so the deeper pass sees only the
-     settled diff.
-  2. On the settled diff before the PR or final handoff, without asking the user,
-     launch `deep-inspector`, which runs inspector's review at max effort.
-  3. Give it the diff, baseline, requirements, and check results, but not the
-     earlier inspector's findings, so it reviews independently.
-  4. Fix confirmed findings and review the fix diff with the default inspector.
-     Rerun the deep review only if the fix itself touches a deep-review type.
-  5. Report in your summary that the deep review ran and what it found.
+  URLs; and data deletion. For a diff touching one, also run one deep review:
+  1. On the settled diff before the PR or final handoff, without asking the
+     user, launch `deep-inspector`, which runs inspector's review at max effort.
+     Use the default inspector until then.
+  2. Give it the usual inspector inputs, including the baseline, but not earlier
+     inspector findings.
+  3. Review fix diffs with the default inspector; rerun the deep review only if
+     a fix itself touches a deep-review type.
+  4. Report in your summary that the deep review ran and what it found.
 
-  Use `deep-inspector` for nothing else. A user's approval of a plan does not
-  replace review.
+  Use `deep-inspector` for nothing else.
 - Use `consultant` before recommending on any architecture or design question: a
   choice between viable options, a data model, API, or integration decision, or a
   change that is hard to reverse, such as rewriting migration history or renaming
@@ -80,14 +80,16 @@ wording fixes that make no claim about code, are small tasks.
   run work that must touch the same file sequentially.
 - Tell each `fixer` to run only the checks for its owned files (lint those paths
   with the repo's own linter, autofixing only those paths, not its repo-wide
-  lint or fix command), and never a test project that shares a database with
-  another running fixer. State that this overrides the project's pre-handoff
+  lint or fix command). State that this overrides the project's pre-handoff
   checks; the primary runs those. Tell it to also run the type-check for its
   owned paths and the repo's fast structural or guard checks when the repo names
-  them, using the command the repo documents. Tell it to verify against a
-  disposable environment, such as a scratch database it creates and tears down,
-  so shared or persistent data and its safeguards (audit logs, triggers,
-  constraints) stay untouched. For rename and move assignments, grep the repo's
+  them, using the command the repo documents. Tell it to run data-writing checks
+  only against a disposable environment (the repo's documented test setup when it
+  is neither shared nor persistent, or a scratch database it creates and tears
+  down), never shared or persistent data or a database another running fixer
+  uses, so data and its safeguards
+  (audit logs, triggers, constraints) stay untouched; if none is available,
+  report the check as not run. For rename and move assignments, grep the repo's
   test directories, including cross-cutting guard or architecture specs, for the
   old paths and names first, and list each matching spec as an owned file,
   because such specs hard-code paths and fixtures. For rename assignments, tell

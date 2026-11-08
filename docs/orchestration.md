@@ -112,15 +112,16 @@ limit, or returns no report, resume it with `SendMessage` and ask it to report
 now rather than restarting it. `Explore` and `Plan` cannot be resumed; start a
 new one.
 
-Fixers lint only their owned files with the repo's own linter, never run a test
-project that shares a database with another running fixer, and leave the full
-lint, type-check, and test suites to the primary agent, which runs them once
-after integration and never two test runs at once. This overrides a project's
-pre-handoff checks. A fixer that writes docs, ADRs, or API descriptions gets the
-implementing diff or file paths and checks each claim against that code. The
-policy also prefers the configured `inspector` over plugin reviewer agents, and
-tells agents to search with Grep and Glob and edit with Edit rather than shell
-`grep`/`find`, `sed -i`, or scripted replacement.
+Fixers lint only their owned files with the repo's own linter, run data-writing
+checks only against a disposable environment (reporting the check as not run
+when none is available), and leave the full lint, type-check, and test suites to
+the primary agent, which runs them once after integration and never two test
+runs at once. This overrides a project's pre-handoff checks. A fixer that writes
+docs, ADRs, or API descriptions gets the implementing diff or file paths and
+checks each claim against that code. The policy also prefers the configured
+`inspector` over plugin reviewer agents, and tells agents to search with Grep
+and Glob and edit with Edit rather than shell `grep`/`find`, `sed -i`, or
+scripted replacement.
 
 Explore and Plan skip CLAUDE.md, so include relevant project constraints in
 their assignments. Fixers retain inherited tools for project-specific workflows
@@ -132,17 +133,19 @@ defaults. High-risk changes always get a review from the default Inspector. For
 the riskiest of them, the Opus types, the primary agent also runs one Opus
 Inspector review at high effort without asking first. The delegation rule
 ([claude/rules/delegation.md](../claude/rules/delegation.md)) lists the Opus
-types and the review steps in the same bullet as the trigger. Approving a plan
-does not replace review. Other custom agents use their configured models.
+types and the four review steps (settled diff, no earlier findings, default
+inspector for fix diffs, report that it ran) right after the high-risk bullet.
+Approving a plan does not replace review. Other custom agents use their
+configured models.
 
 Claude's policy consults before recommending on architecture or design
 questions, including data models, APIs, integrations, and hard-to-reverse
 choices, except obvious answers and small lookups. It also consults after two
 failed bug-fix attempts. For non-trivial changes, meaning those that span more
-than one module or touch routing, guards, schema, or tests, the primary agent
-plans and delegates implementation. Include the instruction to leave further
-delegation to the primary agent when assigning Claude's built-in
-`general-purpose` agent.
+than one module or touch public interfaces, access checks, persisted data
+shapes, or tests, the primary agent plans and delegates implementation. Include
+the instruction to leave further delegation to the primary agent when assigning
+Claude's built-in `general-purpose` agent.
 
 Add another custom role only for a recurring task with distinct tools or
 instructions that these roles and the built-ins do not cover. [Claude routing
@@ -173,15 +176,15 @@ files, and has the primary agent run full suites once after integration.
 High-risk changes always get a review from the default Inspector. For the
 riskiest of them, the deep-review types, the primary agent also runs
 `deep-inspector` once on the settled diff, without asking first and without
-passing the earlier findings. OpenCode's documented `subagent` tool takes no
-per-call model or effort override, so `deep-inspector` is a separate agent:
-Inspector's prompt and permissions on GLM-5.3-Flash at max with a 60-step limit.
-Its description limits it to this review.
-[opencode/AGENTS.md](../opencode/AGENTS.md) lists the types and steps in the
-same bullet as the trigger. They match Claude's Opus types, plus secrets, CI/CD,
-or infrastructure changes and new paths for untrusted input. When a subagent
-returns partial results, the primary agent continues it through its `sessionID`
-instead of starting over.
+passing the earlier findings, and reports that it ran and what it found.
+OpenCode's documented `subagent` tool takes no per-call model or effort
+override, so `deep-inspector` is a separate agent: Inspector's prompt and
+permissions on GLM-5.3-Flash at max with a 60-step limit. Its description limits
+it to this review. [opencode/AGENTS.md](../opencode/AGENTS.md) lists the types
+and the four steps right after the high-risk bullet. They match Claude's Opus
+types, plus secrets, CI/CD, or infrastructure changes and new paths for
+untrusted input. When a subagent returns partial results, the primary agent
+continues it through its `sessionID` instead of starting over.
 
 Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60,
 60, and 30, and the `explore` override sets 40. On the last step OpenCode
@@ -354,10 +357,11 @@ precedence over that global default either way. Routine reviews start at medium;
 state a concrete reason when escalating effort. A settled diff that touches the
 high-risk types (migrations, auth, tenant isolation, payment or financial
 records, how audit entries or sensitive data are written or revealed, or data
-deletion) gets one inspector pass at high effort before the PR. See the
-installable [context and token-use reference](../codex/docs/token-usage.md) for
-matched-task measurement. Session handoffs and skill reuse are covered in the
-Codex policy.
+deletion) gets one fresh inspector (`fork_turns: "none"`, no earlier findings)
+at high effort before the PR, and the primary agent reports that it ran and what
+it found. See the installable [context and token-use
+reference](../codex/docs/token-usage.md) for matched-task measurement. Session
+handoffs and skill reuse are covered in the Codex policy.
 
 Claude agent files set a default `effort` in their frontmatter: low for
 `runner`, medium for `fixer`, and high for `inspector` and `consultant`. The

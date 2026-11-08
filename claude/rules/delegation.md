@@ -6,9 +6,10 @@ When acting as the primary agent, delegate independent work when it materially
 improves speed or quality. Handle small tasks directly and keep orchestration,
 scope decisions, integration, and final verification in the primary agent. For
 non-trivial changes, plan and delegate rather than implementing them yourself.
-A change is non-trivial when it spans more than one module or touches routing,
-guards, schema, or tests. Short wording edits the user dictates, and wording
-fixes that make no claim about code, are small tasks.
+A change is non-trivial when it spans more than one module or touches public
+interfaces, access checks, persisted data shapes, or tests. Short wording edits
+the user dictates, and wording fixes that make no claim about code, are small
+tasks.
 
 - Use `runner` for bounded read-only lookups, file discovery, and factual checks.
 - Use the built-in `Explore` agent for tracing behavior across the codebase and
@@ -18,39 +19,37 @@ fixes that make no claim about code, are small tasks.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation.
   Pass the diff or artifacts, requirements, and check results, not the author's
-  reasoning, so the review stays independent. Always review high-risk changes with
-  the default inspector: renames that reach the schema or stored codes, removing
-  routes or guards, anything without a rollback, and the Opus types (migrations,
-  including squashing or rewriting history; authentication or authorization,
-  including sessions, tokens, and crypto; tenant isolation; payment, billing, or
-  financial records, such as balances or closed periods;
-  changes to how audit entries are written or which fields they record, but not
-  features that only add one; changes to how sensitive or personal data is
-  encrypted, masked, or revealed, or new paths that could copy it into logs,
-  errors, or audit entries; and data deletion). When a diff touches an Opus type,
-  also run an Opus review once; when it matches none of them, skip it:
-  1. Use the default inspector while iterating, so the costly pass sees only the
-     settled diff.
-  2. On the settled diff before the PR or final handoff, without asking the user,
-     spawn `inspector` with the Agent tool's `model: "opus"` override at high
-     effort.
-  3. Give it the diff, requirements, and check results, but not the earlier
-     inspector's findings, so it reviews independently.
-  4. Fix confirmed findings and review the fix diff with the default inspector.
-     Rerun the Opus review only if the fix itself touches an Opus type.
-  5. Report in your summary that the Opus review ran and what it found.
-
-  A user's approval of a plan does not replace review.
+  reasoning, so the review stays independent.
+- Always review high-risk changes with the default inspector: renames that reach
+  persisted names or codes, removing endpoints or access checks, anything
+  without a rollback, and the Opus types. A user's approval of a plan does not
+  replace review.
+- Opus types: migrations, including squashing or rewriting history;
+  authentication or authorization, including sessions, tokens, and crypto;
+  tenant isolation; payment, billing, or financial records, such as balances or
+  closed periods; changes to how audit entries are written or which fields they
+  record, but not features that only add one; changes to how sensitive or
+  personal data is encrypted, masked, or revealed, or new paths that could copy
+  it into logs, errors, or audit entries; and data deletion. For a diff touching
+  one, also run one Opus review:
+  1. On the settled diff before the PR or final handoff, without asking the
+     user, spawn `inspector` with the Agent tool's `model: "opus"`
+     override at high effort. Use the default inspector until then.
+  2. Give it the usual inspector inputs, including the baseline, but not earlier
+     inspector findings.
+  3. Review fix diffs with the default inspector; rerun the Opus review only if
+     a fix itself touches an Opus type.
+  4. Report in your summary that the Opus review ran and what it found.
 - Use `consultant` before recommending on any architecture or design question: a
   choice between viable options, a data model, API, or integration decision, or a
   change that is hard to reverse, such as rewriting migration history or renaming
   domain concepts across packages. Skip it only when the answer is obvious or the
   question is a small lookup. Also use it for a bug that two attempts have not
   fixed. Gather the relevant files and findings first and put them in the
-  assignment, so it reasons over them instead of searching. Include the AGENTS.md
-  sections and specs that state a rule on the topic (grep for it), because a
-  consultant that sees only code argues from a stale comment. State a tighter
-  tool-call budget for a narrow question.
+  assignment, so it reasons over them instead of searching. Include the project
+  instruction sections (CLAUDE.md, AGENTS.md) and specs that state a rule on
+  the topic (grep for it), because a consultant that sees only code argues from
+  a stale comment. State a tighter tool-call budget for a narrow question.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
   yields unverified prose.
@@ -76,14 +75,16 @@ fixes that make no claim about code, are small tasks.
   run work that must touch the same file sequentially.
 - Tell each `fixer` to run only the checks for its owned files (lint those paths
   with the repo's own linter, autofixing only those paths, not its repo-wide
-  lint or fix command), and never a test project that shares a database with
-  another running fixer. State that this overrides the project's pre-handoff
+  lint or fix command). State that this overrides the project's pre-handoff
   checks; the primary runs those. Tell it to also run the type-check for its
   owned paths and the repo's fast structural or guard checks when the repo names
-  them, using the command the repo documents. Tell it to verify against a
-  disposable environment, such as a scratch database it creates and tears down,
-  so shared or persistent data and its safeguards (audit logs, triggers,
-  constraints) stay untouched. For rename and move assignments, grep the repo's
+  them, using the command the repo documents. Tell it to run data-writing checks
+  only against a disposable environment (the repo's documented test setup when it
+  is neither shared nor persistent, or a scratch database it creates and tears
+  down), never shared or persistent data or a database another running fixer
+  uses, so data and its safeguards
+  (audit logs, triggers, constraints) stay untouched; if none is available,
+  report the check as not run. For rename and move assignments, grep the repo's
   test directories, including cross-cutting guard or architecture specs, for the
   old paths and names first, and list each matching spec as an owned file,
   because such specs hard-code paths and fixtures. For rename assignments, tell
