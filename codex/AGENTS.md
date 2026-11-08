@@ -18,6 +18,10 @@ integration, and final verification in the primary agent. Respect requests to wo
   ownership; agents must preserve others' changes. Reuse an agent for related follow-up.
 - Integrate before independent review of meaningful changes, especially auth,
   encryption, migrations, and data integrity. Give multiple reviewers distinct scopes.
+- Before the PR or final handoff, without asking, run inspector once at high effort
+  on a settled diff touching migrations, auth, tenant isolation, payment or financial
+  records, how audit entries or sensitive data are written or revealed, or data
+  deletion. Give it no earlier findings; rerun only if a fix touches those types.
 - Workers run focused checks; the primary runs repository-wide checks. Reuse evidence
   unless later changes or unresolved concerns invalidate it. Resolve confirmed findings.
 - Any open question, clarification, or decision raised, by a subagent to the primary

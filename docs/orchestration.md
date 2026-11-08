@@ -351,9 +351,13 @@ as the fallback when no effort is selected at spawn time, omit
 `default_subagent_reasoning_effort` from its `[agents]` table. For the
 recommended medium fallback, set it to `"medium"`. Explicit spawn effort takes
 precedence over that global default either way. Routine reviews start at medium;
-state a concrete reason when escalating effort. See the installable [context and
-token-use reference](../codex/docs/token-usage.md) for matched-task measurement.
-Session handoffs and skill reuse are covered in the Codex policy.
+state a concrete reason when escalating effort. A settled diff that touches the
+high-risk types (migrations, auth, tenant isolation, payment or financial
+records, how audit entries or sensitive data are written or revealed, or data
+deletion) gets one inspector pass at high effort before the PR. See the
+installable [context and token-use reference](../codex/docs/token-usage.md) for
+matched-task measurement. Session handoffs and skill reuse are covered in the
+Codex policy.
 
 Claude agent files set a default `effort` in their frontmatter: low for
 `runner`, medium for `fixer`, and high for `inspector` and `consultant`. The
