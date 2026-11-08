@@ -23,7 +23,7 @@ fixes that make no claim about code, are small tasks.
   routes or guards, anything without a rollback, and the Opus types (migrations,
   including squashing or rewriting history; authentication or authorization,
   including sessions, tokens, and crypto; tenant isolation; payment, billing, or
-  financial records, such as balances, fund allocations, and closed-period locks;
+  financial records, such as balances or closed periods;
   changes to how audit entries are written or which fields they record, but not
   features that only add one; changes to how sensitive or personal data is
   encrypted, masked, or revealed, or new paths that could copy it into logs,
@@ -76,18 +76,22 @@ fixes that make no claim about code, are small tasks.
   run work that must touch the same file sequentially.
 - Tell each `fixer` to run only the checks for its owned files (lint those paths
   with the repo's own linter, autofixing only those paths, not its repo-wide
-  lint or fix command),
-  and never a test project that shares a database with another running fixer. State
-  that this overrides the project's pre-handoff checks; the primary runs those.
-  Tell it to also run the type-check for its owned paths and the project's
-  database-free guard specs when the repo names them (for example `pnpm test:guards`).
-  For rename and move assignments, grep the repo's root `test/` for the old paths
-  and names first, and list each matching spec as an owned file, because guard
-  specs hard-code paths and fixtures. For rename assignments, tell it to change prose and identifiers only and to leave
-  stored codes (audit actions, module keys, table names), import paths, and SQL
-  literals unchanged unless the assignment lists them. Run the full
-  lint, type-check, and test suites once yourself, after integration, and never
-  two test runs at once.
+  lint or fix command), and never a test project that shares a database with
+  another running fixer. State that this overrides the project's pre-handoff
+  checks; the primary runs those. Tell it to also run the type-check for its
+  owned paths and the repo's fast structural or guard checks when the repo names
+  them, using the command the repo documents. Tell it to verify against a
+  disposable environment, such as a scratch database it creates and tears down,
+  so shared or persistent data and its safeguards (audit logs, triggers,
+  constraints) stay untouched. For rename and move assignments, grep the repo's
+  test directories, including cross-cutting guard or architecture specs, for the
+  old paths and names first, and list each matching spec as an owned file,
+  because such specs hard-code paths and fixtures. For rename assignments, tell
+  it to change prose and identifiers only and to leave persisted codes (enum
+  values, audit action names, table or column names), import paths, and query
+  literals unchanged unless the assignment lists them. Run the full lint,
+  type-check, and test suites once yourself, after integration, and never two
+  test runs at once.
 - Integrate changes before reviewing the combined result. Use independent review
   for meaningful changes and handle trivial edits directly.
 - Resolve missing context and scope dependencies in the primary agent, then resume
