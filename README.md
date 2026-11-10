@@ -103,7 +103,7 @@ OpenCode uses only two models. DeepSeek V4.1 Flash does the lookups and
 implementation, and GLM-5.3-Flash reviews and advises, so Inspector never
 reviews code written by its own model. High-risk changes always get an
 Inspector review. The riskiest also get one deep review from a fresh Inspector
-session with a focus brief;
+session at max with a focus brief;
 [opencode/AGENTS.md](opencode/AGENTS.md) lists which changes qualify and the
 steps.
 

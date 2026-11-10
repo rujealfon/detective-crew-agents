@@ -31,7 +31,7 @@ levels, and the fixer benchmark.
 N/A means this setup does not provide that role for the tool. The model table
 shows configured defaults; for the riskiest change types, Claude Inspector
 escalates to Opus and OpenCode adds a deep review from a fresh Inspector
-session, as described below.
+session at max, as described below.
 
 Each provider has its own delegation policy. Those policies route deeper
 investigation to Codex `tracker`, OpenCode `explore`, or Claude Code's custom
@@ -197,18 +197,20 @@ earlier findings, and reports that it ran and what it found. The deep review is
 a fresh Inspector session, never a continuation of the iteration review, whose
 assignment carries a focus brief: look for subtle defects an earlier pass could
 miss, such as interleavings, edge-case states, bypasses of checks, and silent or
-irreversible failures. OpenCode's documented `subagent` tool takes no per-call
-model or effort override, so a separate max-variant agent is no longer needed.
-The trade-off is that the deep review runs at Inspector's high variant, not max,
-and in exchange draws less of the GLM allowance.
+irreversible failures. The `subagent` tool takes a per-call `model` override
+with a variant (`provider/model#variant`), so the policy launches it with
+`opencode-go/glm-5.3-flash#max` and no separate max-variant agent is needed.
+The tool's own guidance says to set `model` only when the user asks; the policy
+names the exact ID, which counts as that request. If you change Inspector's
+model, update the ID in the policy too.
 [opencode/AGENTS.md](../opencode/AGENTS.md) lists the types and the four steps
 right after the high-risk bullet. They match Claude's Opus
 types, plus secrets, CI/CD, or infrastructure changes and new paths for
 untrusted input. When a fixer's result fails its checks, the policy escalates in
 order: give it a way to verify its own work, rerun it once as a fresh fixer with
-the failed diff and failing output, then consult. Because OpenCode cannot raise
-effort or model per call and Fixer already runs at its top variant, that one
-rerun replaces Claude's effort and model steps. When a subagent returns partial
+the failed diff and failing output, then consult. Fixer already runs at its
+top variant, and moving it to GLM would leave reviews on the model that wrote
+the code, so that one rerun replaces Claude's effort and model steps. When a subagent returns partial
 results, the primary agent continues it through its `sessionID` instead of
 starting over.
 

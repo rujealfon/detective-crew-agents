@@ -42,11 +42,14 @@ small tasks.
   deserialization, uploads, redirects, or server-side fetches of user-supplied
   URLs; and data deletion. For a diff touching one, also run one deep review:
   1. On the settled diff before the PR or final handoff, without asking the
-     user, launch a fresh `inspector` session; never continue the session that
-     did the iteration review. Put in the assignment: "Review independently; you
-     will not receive earlier review findings. Look for subtle defects an earlier
-     pass could miss: interleavings, edge-case states, bypasses of checks, and
-     silent or irreversible failures." Use the default inspector until then.
+     user, launch a fresh `inspector` session with the `subagent` tool's
+     `model: "opencode-go/glm-5.3-flash#max"` override (Inspector's model at
+     its max variant; this policy is the user's explicit request for that
+     override); never continue the session that did the iteration review.
+     Put in the assignment: "Review independently; you will not receive
+     earlier review findings. Look for subtle defects an earlier pass could
+     miss: interleavings, edge-case states, bypasses of checks, and silent or
+     irreversible failures." Use the default inspector until then.
   2. Give it the usual inspector inputs, including the baseline, but not earlier
      inspector findings.
   3. Review fix diffs with the default inspector; rerun the deep review only if
@@ -71,9 +74,10 @@ small tasks.
      had one, go straight to the rerun.
   2. Rerun it once as a fresh `fixer` with a short brief: the failed diff, the
      failing check output, and whether to keep or discard the earlier edits.
-     OpenCode cannot raise a subagent's effort or model per call, and `fixer`
-     already runs at its top variant, so this one fresh rerun replaces Claude's
-     effort and model steps.
+     Keep `fixer` on its configured model: it already runs at its top variant,
+     and switching it to the reviewers' model would leave reviews on the model
+     that wrote the code. This one fresh rerun replaces Claude's effort and
+     model steps.
   3. Only then go to `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
@@ -87,7 +91,8 @@ small tasks.
   questions. Include these output requirements and the instruction to leave
   further delegation to the primary agent in the assignments for `explore` and
   `general`; their built-in system prompts are retained.
-- Use each agent's configured model and effort variant. Respect explicit user requests for a model or effort.
+- Use each agent's configured model and effort variant unless this policy names
+  a `model` override. Respect explicit user requests for a model or effort.
 - Give each assignment its objective, relevant context, file ownership or read-only
   scope, acceptance criteria, and expected evidence. Each fixer assignment names
   the check that proves the change works, so verification comes before reruns.
