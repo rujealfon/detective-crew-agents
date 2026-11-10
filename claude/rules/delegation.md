@@ -12,9 +12,9 @@ the user dictates, and wording fixes that make no claim about code, are small
 tasks.
 
 - Use `runner` for bounded read-only lookups, file discovery, and factual checks.
-- Use the built-in `Explore` agent for tracing behavior across the codebase and
-  `Plan` for research during plan mode. Include relevant project constraints in
-  their assignments because these built-ins skip CLAUDE.md.
+- Use `Explore` (the crew's custom agent) for tracing behavior across the
+  codebase and the built-in `Plan` for research during plan mode. Include
+  relevant project constraints in a `Plan` assignment because it skips CLAUDE.md.
 - Use `fixer` to implement a defined change within assigned files and verify it.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation.
@@ -44,12 +44,34 @@ tasks.
   choice between viable options, a data model, API, or integration decision, or a
   change that is hard to reverse, such as rewriting migration history or renaming
   domain concepts across packages. Skip it only when the answer is obvious or the
-  question is a small lookup. Also use it for a bug that two attempts have not
-  fixed. Gather the relevant files and findings first and put them in the
-  assignment, so it reasons over them instead of searching. Include the project
-  instruction sections (CLAUDE.md, AGENTS.md) and specs that state a rule on
-  the topic (grep for it), because a consultant that sees only code argues from
-  a stale comment. State a tighter tool-call budget for a narrow question.
+  question is a small lookup. Also use it for a bug that has climbed the
+  escalation ladder below without a fix. It runs at its configured high effort.
+  If a high answer did not fix the bug, first run the cheapest check the
+  consultant named and resume it at high with the result. Pass `effort: "xhigh"`
+  only when no new evidence can be gathered, or for a hard-to-reverse decision;
+  its turn limit may cut an xhigh run short, so narrow the question for it.
+  Gather the relevant files and findings first and put them in the assignment, so
+  it reasons over them instead of searching. Include the project instruction
+  sections (CLAUDE.md, AGENTS.md) and specs that state a rule on the topic (grep
+  for it), because a consultant that sees only code argues from a stale comment.
+  State a tighter tool-call budget for a narrow question.
+- When a fixer's result fails its checks, escalate in this order:
+  1. Give it a way to verify its own work, such as a failing test, a build, or a
+     script. This is a precondition, not an attempt; if the assignment already
+     had one, go straight to the reruns.
+  2. Rerun it one effort level higher, capped at high. If the fixer already ran
+     at high, skip to the next step.
+  3. Rerun it with the Agent tool's `model: "opus"` override at medium effort.
+     The drop to medium is intentional: a bigger model starts at a lower effort.
+  4. Only then go to `consultant`.
+
+  Each rerun is a fresh spawn with a short brief: the failed diff, the failing
+  check output, and whether to keep or discard the earlier edits (prompt caches
+  belong to the model that wrote them). For a fixer assignment that touches an
+  Opus type and has no automated outcome check, start the fixer with
+  `model: "opus"` at medium instead of Sonnet. If that fixer fails (a failed
+  manual or review check counts), step 1 still applies; then rerun it on Opus
+  at high, skip step 3, and go to `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
   yields unverified prose.
@@ -59,14 +81,17 @@ tasks.
 - Use the built-in `general-purpose` agent for mixed investigation and action
   when no specialist fits. It can spawn agents, so tell it in the assignment not
   to delegate further.
-- Use each agent's configured model unless this policy names another. Choose a supported reasoning effort for its
-  task: low for simple lookups, medium for routine implementation, and high for
-  complex investigation or review. Respect explicit user requests for effort.
+- Use each agent's configured model unless this policy names another. Choose a
+  supported reasoning effort for its task: low for simple lookups, medium for
+  routine implementation and tracing, and high for complex investigation or
+  review. Respect explicit user requests for effort.
 - Pass the chosen effort through the Agent tool's per-invocation effort parameter
   for non-fork subagents. Respect the `CLAUDE_CODE_EFFORT_LEVEL` environment
   override when set.
-- Give each assignment its objective, relevant context, file ownership or read-only
-  scope, acceptance criteria, and expected evidence. Give inspectors the diff,
+- Give each assignment its objective, relevant context, file ownership or
+  read-only scope, acceptance criteria, and expected evidence. Each fixer
+  assignment names the check that proves the change works, so verification comes
+  before effort. Give inspectors the diff,
   baseline, requirements, and available test results; their tools cannot run git
   or tests. State a tighter tool-call budget for a narrow review.
 - Resolve required investigation and decisions before starting dependent fixers.
@@ -97,10 +122,12 @@ tasks.
   for meaningful changes and handle trivial edits directly.
 - Resolve missing context and scope dependencies in the primary agent, then resume
   `runner`, `inspector`, `consultant`, `fixer`, or `general-purpose` with
-  `SendMessage` and the additional context. `Explore` and `Plan` cannot be resumed;
-  start a new one. When a subagent returns partial, hits its turn limit, or returns
-  no report, resume it and ask it to report now from what it has, listing what it
-  did not verify. Do not restart it.
+  `SendMessage` and the additional context. `Explore` and `Plan` are one-shot,
+  even when `Explore` is the custom agent, and cannot be resumed; start a new
+  one. When a subagent returns
+  partial, hits its turn limit, or returns no report, resume it and ask it to
+  report now from what it has, listing what it did not verify. Do not restart
+  it.
   Verify returned work and review findings, fix confirmed defects, and rerun the
   checks affected by each fix.
 - Any open question, clarification, or decision you raise, whether a subagent

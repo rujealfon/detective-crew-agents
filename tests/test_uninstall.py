@@ -29,7 +29,7 @@ class UninstallTests(unittest.TestCase):
         installed = self.run_command()
         self.assertEqual(installed.returncode, 0, installed.stderr)
         self.installed_files = [path for path in self.home.rglob("*") if path.is_file()]
-        self.assertEqual(len(self.installed_files), 25)
+        self.assertEqual(len(self.installed_files), 26)
 
     def test_codex_token_reference_is_installed_and_removed(self):
         reference = self.home / ".codex/docs/token-usage.md"
@@ -124,6 +124,21 @@ class UninstallTests(unittest.TestCase):
         self.assertIn(str(custom), updated.stderr)
         self.assertEqual(self.snapshot(self.home), before)
         self.assertEqual(list(self.home.rglob("*.bak-*")), [])
+
+    def test_personal_explore_override_blocks_update_without_mutation(self):
+        home = Path(self.directory.name).resolve() / "explore-home"
+        custom = home / ".claude/agents/explore.md"
+        custom.parent.mkdir(parents=True)
+        custom.write_text("---\nname: Explore\nmodel: haiku\n---\nmy own explore\n")
+        before = self.snapshot(home)
+
+        for arguments in ((), ("--update",)):
+            result = self.run_in_home(home, *arguments)
+            self.assertEqual(result.returncode, 1, arguments)
+            self.assertIn("Unrecognized existing instructions or agent", result.stderr)
+            self.assertIn(str(custom), result.stderr)
+            self.assertEqual(self.snapshot(home), before)
+            self.assertEqual(list(home.rglob("*.bak-*")), [])
 
     def test_tool_update_retires_only_that_tools_chief_inspector(self):
         self.write_pre_revert_install()
@@ -907,6 +922,7 @@ class UninstallTests(unittest.TestCase):
             ".claude/agents/fixer.md",
             ".claude/agents/inspector.md",
             ".claude/agents/consultant.md",
+            ".claude/agents/explore.md",
             ".claude/rules/delegation.md",
         }
         self.assertEqual(self.installed_relative_paths(self.home), before - removed)
@@ -969,7 +985,7 @@ class UninstallTests(unittest.TestCase):
         self.assertIn("Install scope", output)
         self.assertIn("Selected: all", output)
         self.assertGreaterEqual(output.count("●"), len(("codex", "claude", "opencode", "grok")) + 1)
-        self.assertEqual(len(self.installed_relative_paths(home)), 25)
+        self.assertEqual(len(self.installed_relative_paths(home)), 26)
 
     def test_interactive_update_confirms_the_highlighted_scope(self):
         before = {path: path.read_bytes() for path in self.installed_files}
@@ -1046,7 +1062,7 @@ class UninstallTests(unittest.TestCase):
         )
         self.assertEqual(returncode, 0, output)
         self.assertIn("Selected: all", output)
-        self.assertEqual(len(self.installed_relative_paths(home)), 25)
+        self.assertEqual(len(self.installed_relative_paths(home)), 26)
 
     def test_interactive_cancel_is_red_and_changes_nothing(self):
         home = self.fresh_home("interactive-cancel")

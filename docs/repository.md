@@ -14,6 +14,7 @@ detective-crew-agents/
 ├── node_modules/
 │   └── .bin/
 │       └── detective-crew-agents
+├── benchmarks/
 ├── docs/
 ├── codex/
 │   ├── AGENTS.md
@@ -25,6 +26,7 @@ detective-crew-agents/
 │   └── tracker.toml
 ├── claude/
 │   ├── consultant.md
+│   ├── explore.md
 │   ├── fixer.md
 │   ├── inspector.md
 │   ├── runner.md

@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENTS = ("runner", "fixer", "inspector", "consultant")
+AGENTS = ("runner", "fixer", "inspector", "consultant", "explore")
 
 
 def read(relative):
@@ -97,9 +97,10 @@ def role_table_configs(readme):
         cells = split_row(line)
         assert len(cells) == 3, f"README.md: malformed Claude role row: {line!r}"
         match = re.fullmatch(r"`(\w+)`", cells[0])
-        if match and match.group(1) in AGENTS:
-            assert match.group(1) not in configs, f"README.md: duplicate Claude role row {cells[0]}"
-            configs[match.group(1)] = cells[2]
+        if match and match.group(1).lower() in AGENTS:
+            agent = match.group(1).lower()
+            assert agent not in configs, f"README.md: duplicate Claude role row {cells[0]}"
+            configs[agent] = cells[2]
     assert sorted(configs) == sorted(AGENTS), (
         f"README.md: Claude role table has agents {sorted(configs)}, expected {sorted(AGENTS)}"
     )
