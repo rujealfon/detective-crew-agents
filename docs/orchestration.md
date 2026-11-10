@@ -111,8 +111,9 @@ incomplete, and names what it did not verify; the turn limits in the table are
 the hard stop. The policy has the primary agent state a tighter budget for a
 narrow review or consultation. When a subagent returns partial, hits its turn
 limit, or returns no report, resume it with `SendMessage` and ask it to report
-now rather than restarting it. Claude Code's `Explore` and `Plan` are one-shot
-and return no agent ID, even when `Explore` is the custom agent, so start a new
+now rather than restarting it. Claude Code's custom `Explore` can be resumed
+like the other crew agents; a foreground result may omit the agent ID, so use
+the ID that sent the report. The built-in `Plan` is one-shot, so start a new
 one instead.
 
 Fixers lint only their owned files with the repo's own linter, run data-writing
