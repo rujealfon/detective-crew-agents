@@ -7,14 +7,11 @@ run so far.
 
 - [Sonnet versus Opus fixer trial, 2026-10-28](sonnet-opus-2026-10-28.md)
 - [Terra versus Sol fixer trial, 2026-10-28](terra-sol-2026-10-28.md)
+- [Inspector and runner effort trials, 2026-11-11](inspector-runner-2026-11-11.md)
 
-Both are seeded smoke runs. They compare candidates on five seeded regressions
-and say little about harder, unseeded work.
-
-Open trial, not yet run: `inspector` with three arms (Sonnet medium, Sonnet
-high, and Opus medium) on seeded defects, to see whether more effort or a
-bigger model finds defects that Sonnet medium misses. The harness needs an
-effort option first (see below).
+All are seeded smoke runs and say little about harder, unseeded work. In the
+inspector and runner trials every arm scored perfectly, so the current settings
+stay; a trial that separates the inspector arms needs harder seeds.
 
 ## Harness
 
@@ -27,6 +24,11 @@ and `--dry-run` validates the baseline and seeds without model calls. It current
 hardcodes medium effort (`--effort medium` for Claude, `model_reasoning_effort`
 for Codex) and records no cost field, only elapsed time and reported token
 usage, so a multi-effort trial needs the effort made a parameter first.
+
+[`tools/benchmark-inspector.py`](../tools/benchmark-inspector.py) and
+[`tools/benchmark-runner.py`](../tools/benchmark-runner.py) take the model and
+effort per arm, record the CLI-reported cost, and score a fenced JSON verdict.
+Both offer `--dry-run`, `--repeats`, `--limit` and `--output`.
 
 ## Method for a model or effort trial
 
