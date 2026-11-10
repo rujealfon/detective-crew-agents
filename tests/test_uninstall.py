@@ -29,7 +29,7 @@ class UninstallTests(unittest.TestCase):
         installed = self.run_command()
         self.assertEqual(installed.returncode, 0, installed.stderr)
         self.installed_files = [path for path in self.home.rglob("*") if path.is_file()]
-        self.assertEqual(len(self.installed_files), 26)
+        self.assertEqual(len(self.installed_files), 25)
 
     def test_codex_token_reference_is_installed_and_removed(self):
         reference = self.home / ".codex/docs/token-usage.md"
@@ -214,8 +214,7 @@ class UninstallTests(unittest.TestCase):
         for action in ("read", "glob", "grep", "webfetch", "websearch"):
             expected_permissions.extend((f"  - action: {action}", '    resource: "*"', '    effect: allow'))
         for agent, model in (("consultant", "glm-5.3-flash#max"),
-                             ("inspector", "glm-5.3-flash#high"),
-                             ("deep-inspector", "glm-5.3-flash#max")):
+                             ("inspector", "glm-5.3-flash#high")):
             with self.subTest(agent=agent):
                 installed = self.home / f".config/opencode/agents/{agent}.md"
                 self.assertEqual(installed.read_bytes(), (ROOT / f"opencode/{agent}.md").read_bytes())
@@ -227,8 +226,13 @@ class UninstallTests(unittest.TestCase):
 
     def test_opencode_deep_review_is_inlined_in_policy(self):
         policy = (self.home / ".config/opencode/AGENTS.md").read_text()
-        self.assertIn("launch `deep-inspector`", policy)
-        self.assertIn("Use `deep-inspector` for nothing else.", policy)
+        flat = " ".join(policy.split())
+        self.assertIn("launch a fresh `inspector` session", flat)
+        self.assertIn("Review independently; you will not receive earlier review findings.", flat)
+        self.assertNotIn("deep-inspector", policy)
+        self.assertIn("has climbed the escalation ladder below without a fix", flat)
+        self.assertIn("When a fixer's result fails its checks, escalate in this order:", flat)
+        self.assertFalse((self.home / ".config/opencode/agents/deep-inspector.md").exists())
         self.assertNotIn("deep-review.md", policy)
         self.assertFalse((self.home / ".config/opencode/docs").exists())
         self.assertFalse((self.home / ".claude/docs").exists())
@@ -260,6 +264,32 @@ class UninstallTests(unittest.TestCase):
             self.assertEqual(len(backups), 1, name)
             self.assertEqual(backups[0].read_bytes(), contents)
 
+    def test_update_retires_and_uninstall_removes_unmodified_deep_inspector(self):
+        name = ".config/opencode/agents/deep-inspector.md"
+        contents = (ROOT / "tests/fixtures/old-deep-inspector.md").read_bytes()
+        uninstalled_home = self.fresh_home("old-deep-inspector-uninstall")
+        (uninstalled_home / name).parent.mkdir(parents=True, exist_ok=True)
+        (uninstalled_home / name).write_bytes(contents)
+        result = self.run_in_home(uninstalled_home, "--uninstall")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((uninstalled_home / name).exists())
+
+        installed = self.home / name
+        installed.write_bytes(contents)
+        updated = self.run_command("--update")
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        self.assertFalse(installed.exists())
+        backups = list(installed.parent.glob(installed.name + ".bak-*"))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual(backups[0].read_bytes(), contents)
+
+    def test_modified_deep_inspector_is_preserved_on_update(self):
+        installed = self.home / ".config/opencode/agents/deep-inspector.md"
+        installed.write_text("my own deep inspector\n")
+        updated = self.run_command("--update")
+        self.assertNotEqual(updated.returncode, 0)
+        self.assertEqual(installed.read_text(), "my own deep inspector\n")
+
     def test_claude_uninstall_leaves_the_old_opencode_review_doc(self):
         home = self.fresh_home("old-docs-claude-uninstall")
         claude_doc = home / ".claude/docs/opus-review.md"
@@ -274,8 +304,7 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(opencode_doc.read_bytes(), opencode_contents)
 
     def test_opencode_agent_step_limits(self):
-        for agent, steps in (("runner", "15"), ("inspector", "60"), ("deep-inspector", "60"),
-                             ("consultant", "30")):
+        for agent, steps in (("runner", "15"), ("inspector", "60"), ("consultant", "30")):
             with self.subTest(agent=agent):
                 frontmatter = (self.home / f".config/opencode/agents/{agent}.md").read_text().split("---\n", 2)[1]
                 self.assertIn(f"steps: {steps}\n", frontmatter)
@@ -288,7 +317,7 @@ class UninstallTests(unittest.TestCase):
     def test_opencode_uses_only_deepseek_and_glm(self):
         allowed = {"opencode-go/deepseek-v4.1-flash", "opencode-go/glm-5.3-flash"}
         models = []
-        for agent in ("runner", "fixer", "inspector", "consultant", "deep-inspector"):
+        for agent in ("runner", "fixer", "inspector", "consultant"):
             text = (self.home / f".config/opencode/agents/{agent}.md").read_text()
             models.append(text.split("model: ", 1)[1].split("\n", 1)[0])
         config = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())
@@ -985,7 +1014,7 @@ class UninstallTests(unittest.TestCase):
         self.assertIn("Install scope", output)
         self.assertIn("Selected: all", output)
         self.assertGreaterEqual(output.count("●"), len(("codex", "claude", "opencode", "grok")) + 1)
-        self.assertEqual(len(self.installed_relative_paths(home)), 26)
+        self.assertEqual(len(self.installed_relative_paths(home)), 25)
 
     def test_interactive_update_confirms_the_highlighted_scope(self):
         before = {path: path.read_bytes() for path in self.installed_files}
@@ -1010,7 +1039,6 @@ class UninstallTests(unittest.TestCase):
                 ".config/opencode/agents/fixer.md",
                 ".config/opencode/agents/inspector.md",
                 ".config/opencode/agents/consultant.md",
-                ".config/opencode/agents/deep-inspector.md",
                 ".config/opencode/opencode.jsonc",
                 ".config/opencode/AGENTS.md",
             },
@@ -1062,7 +1090,7 @@ class UninstallTests(unittest.TestCase):
         )
         self.assertEqual(returncode, 0, output)
         self.assertIn("Selected: all", output)
-        self.assertEqual(len(self.installed_relative_paths(home)), 26)
+        self.assertEqual(len(self.installed_relative_paths(home)), 25)
 
     def test_interactive_cancel_is_red_and_changes_nothing(self):
         home = self.fresh_home("interactive-cancel")

@@ -213,7 +213,6 @@ def main():
         ("opencode/fixer.md", ".config/opencode/agents/fixer.md"),
         ("opencode/inspector.md", ".config/opencode/agents/inspector.md"),
         ("opencode/consultant.md", ".config/opencode/agents/consultant.md"),
-        ("opencode/deep-inspector.md", ".config/opencode/agents/deep-inspector.md"),
         ("opencode/opencode.jsonc", ".config/opencode/opencode.jsonc"),
         ("opencode/AGENTS.md", ".config/opencode/AGENTS.md"),
         ("grok/runner.md", ".grok/agents/runner.md"),
@@ -243,6 +242,7 @@ def main():
         ("grok", ".grok/agents/chief-inspector.md"),
         ("claude", ".claude/docs/opus-review.md"),
         ("opencode", ".config/opencode/docs/deep-review.md"),
+        ("opencode", ".config/opencode/agents/deep-inspector.md"),
     ]
     prompted = not args.tool and sys.stdin.isatty() and sys.stdout.isatty()
     selected = resolve_tools(parser, args)
