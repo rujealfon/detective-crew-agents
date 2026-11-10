@@ -122,8 +122,9 @@ tasks.
   for meaningful changes and handle trivial edits directly.
 - Resolve missing context and scope dependencies in the primary agent, then resume
   `runner`, `inspector`, `consultant`, `fixer`, or `general-purpose` with
-  `SendMessage` and the additional context. `Explore` and `Plan` may be one-shot
-  and not resumable; if a resume fails, start a new one. When a subagent returns
+  `SendMessage` and the additional context. `Explore` and `Plan` are one-shot,
+  even when `Explore` is the custom agent, and cannot be resumed; start a new
+  one. When a subagent returns
   partial, hits its turn limit, or returns no report, resume it and ask it to
   report now from what it has, listing what it did not verify. Do not restart
   it.

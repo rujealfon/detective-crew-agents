@@ -125,6 +125,21 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(self.snapshot(self.home), before)
         self.assertEqual(list(self.home.rglob("*.bak-*")), [])
 
+    def test_personal_explore_override_blocks_update_without_mutation(self):
+        home = Path(self.directory.name).resolve() / "explore-home"
+        custom = home / ".claude/agents/explore.md"
+        custom.parent.mkdir(parents=True)
+        custom.write_text("---\nname: Explore\nmodel: haiku\n---\nmy own explore\n")
+        before = self.snapshot(home)
+
+        for arguments in ((), ("--update",)):
+            result = self.run_in_home(home, *arguments)
+            self.assertEqual(result.returncode, 1, arguments)
+            self.assertIn("Unrecognized existing instructions or agent", result.stderr)
+            self.assertIn(str(custom), result.stderr)
+            self.assertEqual(self.snapshot(home), before)
+            self.assertEqual(list(home.rglob("*.bak-*")), [])
+
     def test_tool_update_retires_only_that_tools_chief_inspector(self):
         self.write_pre_revert_install()
         updated = self.run_command("--tool", "claude", "--update")
