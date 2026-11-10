@@ -30,8 +30,8 @@ levels, and the fixer benchmark.
 
 N/A means this setup does not provide that role for the tool. The model table
 shows configured defaults; for the riskiest change types, Claude Inspector
-escalates to Opus and OpenCode adds a `deep-inspector` review, as described
-below.
+escalates to Opus and OpenCode adds a deep review from a fresh Inspector
+session, as described below.
 
 Each provider has its own delegation policy. Those policies route deeper
 investigation to Codex `tracker`, OpenCode `explore`, or Claude Code's custom
@@ -52,11 +52,12 @@ Call Consultant before dependent implementation when an architecture or design
 decision remains unresolved. Examples include choosing a module boundary,
 deciding where state should live, or comparing migration strategies with
 different risks. Architecture consultation can happen immediately; the
-two-attempt threshold applies to stubborn bugs in Codex, OpenCode, and Grok. For
-those bugs, consult after two evidence-based attempts have failed, supplying
-each hypothesis, attempted fix, and observed result. Claude Code instead
-climbs the fixer escalation ladder described under [Claude
-orchestration](#claude-orchestration) before it consults.
+two-attempt threshold applies to stubborn bugs in Codex and Grok. For those
+bugs, consult after two evidence-based attempts have failed, supplying each
+hypothesis, attempted fix, and observed result. Claude Code and OpenCode instead
+climb a fixer escalation ladder, described under [Claude
+orchestration](#claude-orchestration) and [OpenCode
+orchestration](#opencode-orchestration), before they consult.
 
 Give Consultant a specific decision or diagnostic question, relevant code and
 evidence, constraints, viable options, and previous attempts when applicable. It
@@ -169,7 +170,7 @@ and tools](https://code.claude.com/docs/en/sub-agents)
 
 ## OpenCode orchestration
 
-The seven roles combine five custom agents with the built-in `explore` and
+The six roles combine four custom agents with the built-in `explore` and
 `general` subagents. Keep coordination, decisions, integration, and final
 verification in the primary agent.
 
@@ -178,41 +179,49 @@ The role table lives in the [README](../README.md#opencode-orchestration).
 Follow the [consultation and handoff guidance](#consultation-and-handoffs),
 using `explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1
 Flash runs Runner and `explore` at high, and Fixer and `general` at max.
-GLM-5.3-Flash runs Inspector at high, and Consultant and `deep-inspector` at
-max, so reviews always come from a different model than the one that wrote the
-code. Watch GLM-5.3-Flash usage in the console: if regular reviews near its
-weekly allowance, move Inspector back to DeepSeek; `deep-inspector` and
-Consultant stay on GLM and also draw on that allowance. Revisit the split based
-on the quality of findings and recommendations on your projects.
+GLM-5.3-Flash runs Inspector at high and Consultant at max, so reviews always
+come from a different model than the one that wrote the code. Watch
+GLM-5.3-Flash usage in the console. Keep Inspector on GLM: the deep review is an
+Inspector session, so moving Inspector to DeepSeek would review the riskiest
+diffs with the model that wrote them. Revisit the split based on the quality of
+findings and recommendations on your projects.
 
 The OpenCode policy mirrors the [Claude orchestration](#claude-orchestration)
 rules: it plans and delegates non-trivial changes, consults before recommending
 on architecture or design questions, scopes each fixer's checks to its owned
 files, and has the primary agent run full suites once after integration.
 High-risk changes always get a review from the default Inspector. For the
-riskiest of them, the deep-review types, the primary agent also runs
-`deep-inspector` once on the settled diff, without asking first and without
-passing the earlier findings, and reports that it ran and what it found.
-OpenCode's documented `subagent` tool takes no per-call model or effort
-override, so `deep-inspector` is a separate agent: Inspector's prompt and
-permissions on GLM-5.3-Flash at max with a 60-step limit. Its description limits
-it to this review. [opencode/AGENTS.md](../opencode/AGENTS.md) lists the types
-and the four steps right after the high-risk bullet. They match Claude's Opus
+riskiest of them, the deep-review types, the primary agent also runs one deep
+review on the settled diff, without asking first and without passing the
+earlier findings, and reports that it ran and what it found. The deep review is
+a fresh Inspector session, never a continuation of the iteration review, whose
+assignment carries a focus brief: look for subtle defects an earlier pass could
+miss, such as interleavings, edge-case states, bypasses of checks, and silent or
+irreversible failures. OpenCode's documented `subagent` tool takes no per-call
+model or effort override, so a separate max-variant agent is no longer needed.
+The trade-off is that the deep review runs at Inspector's high variant, not max,
+and in exchange draws less of the GLM allowance.
+[opencode/AGENTS.md](../opencode/AGENTS.md) lists the types and the four steps
+right after the high-risk bullet. They match Claude's Opus
 types, plus secrets, CI/CD, or infrastructure changes and new paths for
-untrusted input. When a subagent returns partial results, the primary agent
-continues it through its `sessionID` instead of starting over.
+untrusted input. When a fixer's result fails its checks, the policy escalates in
+order: give it a way to verify its own work, rerun it once as a fresh fixer with
+the failed diff and failing output, then consult. Because OpenCode cannot raise
+effort or model per call and Fixer already runs at its top variant, that one
+rerun replaces Claude's effort and model steps. When a subagent returns partial
+results, the primary agent continues it through its `sessionID` instead of
+starting over.
 
-Runner, Inspector, Deep Inspector, and Consultant set `steps` limits of 15, 60,
-60, and 30, and the `explore` override sets 40. On the last step OpenCode
+Runner, Inspector, and Consultant set `steps` limits of 15, 60, and 30, and the `explore` override sets 40. On the last step OpenCode
 removes tools and asks the agent to summarize, so a long task still ends with a
 report; continuing the agent through its `sessionID` resets the allowance. Fixer
 and `general` have no step limit, so an edit is never cut off halfway.
 
-Inspector, Deep Inspector, and Consultant deny all permissions, then allow only
+Inspector and Consultant deny all permissions, then allow only
 `read`, `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and
 further subagents stay denied. Supply relevant command output with their
-assignments and run validation through the primary agent or Fixer. Every role,
-including `deep-inspector`, runs on its configured model and variant. Runner
+assignments and run validation through the primary agent or Fixer. Every role
+runs on its configured model and variant. Runner
 uses inspection operations by instruction but inherits permissions; its prompt
 is not a permission boundary.
 

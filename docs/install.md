@@ -29,8 +29,10 @@ Customized instructions still stop the update before any files are changed.
 Claude's Opus review and OpenCode's deep review steps now live inside their
 delegation policies (`~/.claude/rules/delegation.md` and
 `~/.config/opencode/AGENTS.md`). The separate `opus-review.md` and
-`deep-review.md` docs from earlier releases are retired: `--update` backs up and
-removes unmodified copies, and `--uninstall` removes them.
+`deep-review.md` docs from earlier releases are retired, and so is OpenCode's
+`~/.config/opencode/agents/deep-inspector.md` agent: `--update` backs up and
+removes unmodified copies, and `--uninstall` removes them. A copy you edited is
+left in place and stops `--update` until you move or delete it.
 
 An existing personal `~/.claude/agents/explore.md` (or `Explore.md` on
 case-insensitive filesystems) with unrecognized content makes the installer stop
@@ -47,17 +49,17 @@ An empty global `CLAUDE.md` is fine: the delegation rule still loads. There is n
 need to duplicate the policy in both files. [Claude global instructions](https://code.claude.com/docs/en/memory#choose-where-to-put-claudemd-files)
 and [global rules](https://code.claude.com/docs/en/memory#user-level-rules).
 
-OpenCode's `runner`, `fixer`, `inspector`, `consultant`, and `deep-inspector` definitions live in
+OpenCode's `runner`, `fixer`, `inspector`, and `consultant` definitions live in
 `~/.config/opencode/agents/*.md`. Its `explore` and `general` model, description, and step-limit overrides
 live in `~/.config/opencode/opencode.jsonc`.
 
 The OpenCode agents use two [OpenCode Go](https://opencode.ai/docs/go/) models:
 DeepSeek V4.1 Flash for `runner`, `explore`, `fixer`, and `general`, and
-GLM-5.3-Flash for `inspector`, `deep-inspector`, and `consultant`. By default, Go allows only the Europe and
+GLM-5.3-Flash for `inspector` and `consultant`. By default, Go allows only the Europe and
 United States regions, which blocks DeepSeek. Before you use the agents, have a
 workspace owner or admin open **Settings › Privacy** in the
 [OpenCode Console](https://opencode.ai/console) and select **Global** under
-**Regions**. If you skip this, every agent except the three GLM agents fails. GLM-5.3-Flash
+**Regions**. If you skip this, every agent except the two GLM agents fails. GLM-5.3-Flash
 needs no privacy change. DeepSeek requests count double against your Go
 allowance during peak hours: 01:00–04:00 and 06:00–10:00 UTC, Monday through
 Friday.

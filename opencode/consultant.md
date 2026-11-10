@@ -1,5 +1,5 @@
 ---
-description: Use for architecture and design decisions, trade-off analysis, and bugs that two evidence-based attempts have not fixed. Do not use for routine work.
+description: Use for architecture and design decisions, trade-off analysis, and bugs the escalation ladder has not fixed. Do not use for routine work.
 mode: subagent
 model: opencode-go/glm-5.3-flash#max
 steps: 30

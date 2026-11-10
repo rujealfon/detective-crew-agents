@@ -42,26 +42,39 @@ small tasks.
   deserialization, uploads, redirects, or server-side fetches of user-supplied
   URLs; and data deletion. For a diff touching one, also run one deep review:
   1. On the settled diff before the PR or final handoff, without asking the
-     user, launch `deep-inspector`, which runs inspector's review at max effort.
-     Use the default inspector until then.
+     user, launch a fresh `inspector` session; never continue the session that
+     did the iteration review. Put in the assignment: "Review independently; you
+     will not receive earlier review findings. Look for subtle defects an earlier
+     pass could miss: interleavings, edge-case states, bypasses of checks, and
+     silent or irreversible failures." Use the default inspector until then.
   2. Give it the usual inspector inputs, including the baseline, but not earlier
      inspector findings.
   3. Review fix diffs with the default inspector; rerun the deep review only if
      a fix itself touches a deep-review type.
   4. Report in your summary that the deep review ran and what it found.
-
-  Use `deep-inspector` for nothing else.
 - Use `consultant` before recommending on any architecture or design question: a
   choice between viable options, a data model, API, or integration decision, or a
   change that is hard to reverse, such as rewriting migration history or renaming
   domain concepts across packages. Skip it only when the answer is obvious or the
-  question is a small lookup. Also use it for a bug that two attempts have not
-  fixed. Gather the relevant files and findings first and put them in the
+  question is a small lookup. Also use it for a bug that has climbed the
+  escalation ladder below without a fix. If its answer did not fix the bug, run
+  the cheapest check it named and continue it through its `sessionID` with the
+  result. Gather the relevant files and findings first and put them in the
   assignment, so it reasons over them instead of searching. Include the AGENTS.md
   sections and specs that state a rule on the topic (grep for it), because a
   consultant that sees only code argues from a stale comment. State a tighter
   tool-call budget for a narrow question. The primary agent resolves the
   recommendation before assigning dependent work.
+- When a fixer's result fails its checks, escalate in this order:
+  1. Give it a way to verify its own work, such as a failing test, a build, or a
+     script. This is a precondition, not an attempt; if the assignment already
+     had one, go straight to the rerun.
+  2. Rerun it once as a fresh `fixer` with a short brief: the failed diff, the
+     failing check output, and whether to keep or discard the earlier edits.
+     OpenCode cannot raise a subagent's effort or model per call, and `fixer`
+     already runs at its top variant, so this one fresh rerun replaces Claude's
+     effort and model steps.
+  3. Only then go to `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
   yields unverified prose.
@@ -76,7 +89,9 @@ small tasks.
   `general`; their built-in system prompts are retained.
 - Use each agent's configured model and effort variant. Respect explicit user requests for a model or effort.
 - Give each assignment its objective, relevant context, file ownership or read-only
-  scope, acceptance criteria, and expected evidence. Give inspectors the diff,
+  scope, acceptance criteria, and expected evidence. Each fixer assignment names
+  the check that proves the change works, so verification comes before reruns.
+  Give inspectors the diff,
   baseline, requirements, and available test results; their permissions exclude
   shell execution and edits, so they cannot run git or tests. State a tighter
   tool-call budget for a narrow review.
