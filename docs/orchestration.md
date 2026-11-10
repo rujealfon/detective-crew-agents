@@ -23,7 +23,7 @@ levels, and the fixer benchmark.
   Tracker for tracing.
 - `explore` is OpenCode's built-in subagent for tracing behavior, dependencies,
   and likely causes without code edits. Prefer Runner for bounded factual
-  lookups.
+  lookups. Claude Code's custom `Explore` fills the same role on Sonnet 5.5.
 - `general` is OpenCode's built-in subagent for bounded mixed investigation and
   implementation when no specialist fits. Prefer Fixer for a defined change and
   Explore for tracing.
@@ -34,13 +34,13 @@ escalates to Opus and OpenCode adds a `deep-inspector` review, as described
 below.
 
 Each provider has its own delegation policy. Those policies route deeper
-investigation to Codex `tracker`, OpenCode `explore`, or Claude Code's built-in
-`Explore` when available. Mixed work goes to Codex `default`, OpenCode
-`general`, or Claude Code's built-in `general-purpose` when available. These
-Claude built-ins keep their own model settings; this setup configures only
-Claude's four custom roles. For tools without a matching specialist, the primary
-agent handles the work or splits it into scoped assignments for available
-agents.
+investigation to Codex `tracker`, OpenCode `explore`, or Claude Code's custom
+`Explore`. Mixed work goes to Codex `default`, OpenCode
+`general`, or Claude Code's built-in `general-purpose` when available. Claude's
+`Explore` is a custom agent that overrides the built-in; the other Claude
+built-ins keep their own model settings. For tools without a matching
+specialist, the primary agent handles the work or splits it into scoped
+assignments for available agents.
 
 ## Consultation and handoffs
 
@@ -52,9 +52,11 @@ Call Consultant before dependent implementation when an architecture or design
 decision remains unresolved. Examples include choosing a module boundary,
 deciding where state should live, or comparing migration strategies with
 different risks. Architecture consultation can happen immediately; the
-two-attempt threshold applies to stubborn bugs. For those bugs, consult after
-two evidence-based attempts have failed, supplying each hypothesis, attempted
-fix, and observed result.
+two-attempt threshold applies to stubborn bugs in Codex, OpenCode, and Grok. For
+those bugs, consult after two evidence-based attempts have failed, supplying
+each hypothesis, attempted fix, and observed result. Claude Code instead
+climbs the fixer escalation ladder described under [Claude
+orchestration](#claude-orchestration) before it consults.
 
 Give Consultant a specific decision or diagnostic question, relevant code and
 evidence, constraints, viable options, and previous attempts when applicable. It
@@ -76,7 +78,7 @@ requirements. An inspector finding may expose a design question that the primary
 agent routes back to Consultant.
 
 Use the corresponding investigation role for each provider: Codex `tracker`,
-OpenCode `explore`, or Claude's built-in `Explore`. Grok delegates bounded
+OpenCode `explore`, or Claude's `Explore`. Grok delegates bounded
 lookups to Runner and keeps deeper tracing in the primary agent. Its Consultant
 advises on unresolved design choices; the primary agent makes the final
 decision.
@@ -90,7 +92,7 @@ validation results.
 
 ## Claude orchestration
 
-The four custom roles complement Claude's built-in agents. Keep coordination,
+The five custom roles complement Claude's built-in agents. Keep coordination,
 scope decisions, integration, and final verification in the primary
 conversation.
 
@@ -109,8 +111,8 @@ incomplete, and names what it did not verify; the turn limits in the table are
 the hard stop. The policy has the primary agent state a tighter budget for a
 narrow review or consultation. When a subagent returns partial, hits its turn
 limit, or returns no report, resume it with `SendMessage` and ask it to report
-now rather than restarting it. `Explore` and `Plan` cannot be resumed; start a
-new one.
+now rather than restarting it. Claude Code's `Explore` and `Plan` may be
+one-shot and not resumable; if a resume fails, start a new one.
 
 Fixers lint only their owned files with the repo's own linter, run data-writing
 checks only against a disposable environment (reporting the check as not run
@@ -123,12 +125,12 @@ checks each claim against that code. The policy also prefers the configured
 and Glob and edit with Edit rather than shell `grep`/`find`, `sed -i`, or
 scripted replacement.
 
-Explore and Plan skip CLAUDE.md, so include relevant project constraints in
-their assignments. Fixers retain inherited tools for project-specific workflows
-but cannot spawn further subagents through Agent. Runner, inspector, and
+The built-in Plan skips CLAUDE.md, so include relevant project constraints in
+its assignments. Fixers retain inherited tools for project-specific workflows
+but cannot spawn further subagents through Agent. Runner, Explore, inspector, and
 consultant use explicit inspection tool lists, which also exclude shell, edits,
 and MCP tools. Send work requiring those tools to the primary agent or a
-suitably scoped fixer. The four custom agents have configured model and effort
+suitably scoped fixer. The five custom agents have configured model and effort
 defaults. High-risk changes always get a review from the default Inspector. For
 the riskiest of them, the Opus types, the primary agent also runs one Opus
 Inspector review at high effort without asking first. The delegation rule
@@ -140,12 +142,24 @@ configured models.
 
 Claude's policy consults before recommending on architecture or design
 questions, including data models, APIs, integrations, and hard-to-reverse
-choices, except obvious answers and small lookups. It also consults after two
-failed bug-fix attempts. For non-trivial changes, meaning those that span more
+choices, except obvious answers and small lookups. When a fixer's result fails
+its checks, it escalates in order: give the fixer a way to verify its own work
+(a precondition, skipped when the assignment already had one), rerun one effort
+level higher (capped at high), rerun with the Opus model override at medium
+effort, then consult. Each rerun is a fresh spawn with the failed diff, the
+failing check output, and a keep-or-discard instruction for earlier edits. A
+fixer assignment that touches an Opus type and has no automated outcome check
+starts on Opus at medium; if it fails, it reruns on Opus at high and then
+goes to the consultant. Consultant runs at high effort; if a high answer did
+not fix the bug, the primary agent first runs the cheapest check it named and
+resumes it, and passes xhigh only when no new evidence can be gathered or for a
+hard-to-reverse decision. For non-trivial changes, meaning those that span more
 than one module or touch public interfaces, access checks, persisted data
 shapes, or tests, the primary agent plans and delegates implementation. Include
 the instruction to leave further delegation to the primary agent when assigning
-Claude's built-in `general-purpose` agent.
+Claude's built-in `general-purpose` agent. The built-in `Plan` and
+`general-purpose` still inherit the session model; `CLAUDE_CODE_SUBAGENT_MODEL`
+sets the default model for subagents that have none.
 
 Add another custom role only for a recurring task with distinct tools or
 instructions that these roles and the built-ins do not cover. [Claude routing
@@ -364,11 +378,12 @@ reference](../codex/docs/token-usage.md) for matched-task measurement. Session
 handoffs and skill reuse are covered in the Codex policy.
 
 Claude agent files set a default `effort` in their frontmatter: low for
-`runner`, medium for `fixer`, and high for `inspector` and `consultant`. The
+`runner`, medium for `fixer` and `Explore`, and high for `inspector` and
+`consultant`. The
 delegation policy also asks the primary agent to pass a supported effort level
 through the Agent tool for each non-fork subagent invocation: low for simple
-lookups, medium for routine implementation, and high for complex investigation
-or review. `CLAUDE_CODE_EFFORT_LEVEL`, if set, overrides per-invocation choices.
+lookups, medium for routine implementation and tracing, and high for complex
+investigation or review. `CLAUDE_CODE_EFFORT_LEVEL`, if set, overrides per-invocation choices.
 Unset that environment variable to let the primary agent choose effort. The
 installer leaves Claude settings and shell environment variables unchanged.
 Restart Claude Code after updating to load the new agent definitions. [Claude

@@ -1,6 +1,6 @@
 ---
 name: consultant
-description: Use for architecture and design decisions, trade-off analysis, and bugs that two attempts have not fixed. Costly; do not use for routine work.
+description: Use for architecture and design decisions, trade-off analysis, and bugs the escalation ladder has not fixed. Costly; do not use for routine work.
 model: claude-opus-5-5
 # Do not add Bash here: on macOS it removes Glob and Grep.
 tools: Read, Glob, Grep, WebFetch, WebSearch

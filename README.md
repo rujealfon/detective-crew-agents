@@ -28,21 +28,21 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | Tool | `runner` | `fixer` | `inspector` | `consultant` | `tracker` | `default` | `explore` | `general` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex | `gpt-6-luna` | `gpt-6.1-terra` | `gpt-6.1-sol` | `gpt-6-astra` | `gpt-6-luna` | `gpt-6.1-sol` | N/A | N/A |
-| Claude Code | `claude-haiku-5-5`, low | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | N/A | N/A |
+| Claude Code | `claude-haiku-5-5`, low | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | `claude-sonnet-5-5`, medium | N/A |
 | OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/glm-5.3-flash`, high | `opencode-go/glm-5.3-flash`, max | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
 | Grok Build | `grok-4.7`, low | `grok-4.7`, medium | `grok-4.7`, high | `grok-4.7`, xhigh | N/A | N/A | N/A | N/A |
 
 N/A means the tool doesn't get that role. OpenCode's `deep-inspector`, used only
 for the riskiest diffs, runs `opencode-go/glm-5.3-flash` at max. Codex leaves effort to the Chief at
 spawn time, so its row lists models only. `default` (Codex) and `general`
-(OpenCode) handle mixed work; `explore` (OpenCode) traces code.
+(OpenCode) handle mixed work; `explore` (Claude Code, OpenCode) traces code.
 
 ## How a case runs
 
 Use only the stages a task needs. Small tasks stay with the Chief.
 
-1. **Gather evidence**: Runner looks things up; Tracker (or a built-in explorer) traces deeper.
-2. **Consult**: Consultant weighs in on an unresolved design decision, or after two failed bug-fix attempts.
+1. **Gather evidence**: Runner looks things up; Tracker (or `explore`, or Claude Code's custom `Explore`) traces deeper.
+2. **Consult**: Consultant weighs in on an unresolved design decision, or after two failed bug-fix attempts (Claude Code climbs an escalation ladder first).
 3. **Implement**: Fixer makes the agreed change in the files it owns.
 4. **Inspect**: Inspector reviews the combined diff against the requirements.
 
@@ -63,7 +63,7 @@ effort levels are in [docs/orchestration.md](docs/orchestration.md).
 | `fixer` | Implement an agreed change within owned files and verify it | Sonnet 5.5, medium; no turn limit; inherited tools, including shell, editing, skills, and MCP; Agent disabled |
 | `inspector` | Review a supplied diff for concrete defects and explain their impact | Sonnet 5.5, high; max 60 turns, reports from 50 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
 | `consultant` | Advise on architecture, design trade-offs, and stubborn bugs; use sparingly | Opus 5.5, high; max 30 turns, reports from 24 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
-| `Explore` built-in | Trace behavior and dependencies across the codebase | Built-in read-only tools |
+| `Explore` | Trace behavior and dependencies across the codebase; overrides the built-in | Sonnet 5.5, medium; max 40 turns, reports from 32 tool calls; Read, Glob, Grep |
 | `Plan` built-in | Gather research during plan mode | Built-in read-only tools |
 | `general-purpose` built-in | Mixed investigation and action without a matching specialist | Built-in available tools |
 

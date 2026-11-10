@@ -32,6 +32,10 @@ delegation policies (`~/.claude/rules/delegation.md` and
 `deep-review.md` docs from earlier releases are retired: `--update` backs up and
 removes unmodified copies, and `--uninstall` removes them.
 
+An existing personal `~/.claude/agents/explore.md` (or `Explore.md` on
+case-insensitive filesystems) with unrecognized content makes the installer stop
+without installing anything; move or delete it first.
+
 Agent definitions install into `~/.codex/agents/`, `~/.claude/agents/`,
 `~/.config/opencode/agents/`, and `~/.grok/agents/`, respectively. OpenCode's
 built-in role overrides also install into `~/.config/opencode/opencode.jsonc`.
