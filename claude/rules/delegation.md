@@ -121,13 +121,12 @@ tasks.
 - Integrate changes before reviewing the combined result. Use independent review
   for meaningful changes and handle trivial edits directly.
 - Resolve missing context and scope dependencies in the primary agent, then resume
-  `runner`, `inspector`, `consultant`, `fixer`, or `general-purpose` with
-  `SendMessage` and the additional context. `Explore` and `Plan` are one-shot,
-  even when `Explore` is the custom agent, and cannot be resumed; start a new
-  one. When a subagent returns
-  partial, hits its turn limit, or returns no report, resume it and ask it to
-  report now from what it has, listing what it did not verify. Do not restart
-  it.
+  `runner`, `Explore`, `inspector`, `consultant`, `fixer`, or `general-purpose`
+  with `SendMessage` and the additional context. A foreground result may omit
+  the agent ID; use the ID that sent the report. The built-in `Plan` is
+  one-shot; start a new one. When a subagent returns partial, hits its turn
+  limit, or returns no report, resume it and ask it to report now from what it
+  has, listing what it did not verify. Do not restart it.
   Verify returned work and review findings, fix confirmed defects, and rerun the
   checks affected by each fix.
 - Any open question, clarification, or decision you raise, whether a subagent
