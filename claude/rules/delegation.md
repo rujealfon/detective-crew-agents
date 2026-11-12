@@ -15,6 +15,9 @@ tasks.
 - Use `Explore` (the crew's custom agent) for tracing behavior across the
   codebase and the built-in `Plan` for research during plan mode. Include
   relevant project constraints in a `Plan` assignment because it skips CLAUDE.md.
+  For a read-every-file audit, give each `Explore` one feature directory or at most
+  about 40 files, list the files, and have it report which it read in full: it
+  stops at 32 tool calls, so a wider scope returns a sample.
 - Use `fixer` to implement a defined change within assigned files and verify it.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation.
