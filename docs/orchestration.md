@@ -29,8 +29,8 @@ levels, and the fixer benchmark.
   Explore for tracing.
 
 N/A means this setup does not provide that role for the tool. The model table
-shows configured defaults; for the riskiest change types, Claude Inspector
-escalates to Opus and OpenCode adds a deep review from a fresh Inspector
+shows configured defaults; for the riskiest change types, Claude runs the
+Inspector review on Opus and OpenCode adds a deep review from a fresh Inspector
 session at max, as described below.
 
 Each provider has its own delegation policy. Those policies route deeper
@@ -137,9 +137,9 @@ but cannot spawn further subagents through Agent. Runner, Explore, inspector, an
 consultant use explicit inspection tool lists, which also exclude shell, edits,
 and MCP tools. Send work requiring those tools to the primary agent or a
 suitably scoped fixer. The five custom agents have configured model and effort
-defaults. High-risk changes always get a review from the default Inspector. For
-the riskiest of them, the Opus types, the primary agent also runs one Opus
-Inspector review at high effort without asking first. The delegation rule
+defaults. High-risk changes get a review from the default Inspector. Opus
+types get one Opus Inspector review at high effort, with a budget of about 30
+tool calls, instead of that default review. The delegation rule
 ([claude/rules/delegation.md](../claude/rules/delegation.md)) lists the Opus
 types and the four review steps (settled diff, no earlier findings, default
 inspector for fix diffs, report that it ran) right after the high-risk bullet.
@@ -172,8 +172,8 @@ way to verify its own work (a precondition, skipped when the assignment already
 had one), rerun one effort level higher (capped at high), take the change over
 in the primary agent, then consult. Each rerun is a fresh spawn with the failed
 diff, the failing check output, and a keep-or-discard instruction for earlier
-edits. Implement a change that touches an Opus type and has no automated
-outcome check in the primary agent. If that check fails, go to the consultant.
+edits. Implement a change that touches an Opus type in the primary agent. If
+that check fails, go to the consultant.
 Include the instruction to leave further delegation to the primary agent when
 assigning Claude's built-in `general-purpose` agent. The built-in `Plan` and
 `general-purpose` still inherit the session model; `CLAUDE_CODE_SUBAGENT_MODEL`
@@ -406,12 +406,11 @@ it found. See the installable [context and token-use
 reference](../codex/docs/token-usage.md) for matched-task measurement. Session
 handoffs and skill reuse are covered in the Codex policy.
 
-Claude agent files set a default `effort` in their frontmatter: low for
-`runner`, medium for `fixer` and `Explore`, and high for `inspector` and
-`consultant`. The
-delegation policy also asks the primary agent to pass a supported effort level
-through the Agent tool for each non-fork subagent invocation: low for simple
-lookups, medium for routine implementation and tracing, and high for complex
+Claude agent files set a default `effort` in their frontmatter: medium for
+`runner`, `fixer`, and `Explore`, and high for `inspector` and `consultant`.
+The delegation policy also asks the primary agent to pass a supported effort
+level through the Agent tool for each non-fork subagent invocation: medium for
+lookups, routine implementation, and tracing, and high for complex
 investigation or review. `CLAUDE_CODE_EFFORT_LEVEL`, if set, overrides per-invocation choices.
 Unset that environment variable to let the primary agent choose effort. The
 installer leaves Claude settings and shell environment variables unchanged.
