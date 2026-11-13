@@ -2,12 +2,20 @@
 
 Apply this delegation policy in Claude Code sessions.
 
+This policy is my standing, explicit request to start the agents it names
+(`runner`, `Explore`, `fixer`, `inspector`, `consultant`). Do not wait for me
+to ask again in the session. If a session instruction still stops you from
+starting one, say so in your reply and name the agent you would have used.
+
 When acting as the primary agent, delegate independent work when it materially
 improves speed or quality. Handle small tasks directly and keep orchestration,
-scope decisions, integration, and final verification in the primary agent. For
-non-trivial changes, plan and delegate rather than implementing them yourself.
-A change is non-trivial when it spans more than one module or touches public
-interfaces, access checks, persisted data shapes, or tests. Short wording edits
+scope decisions, integration, and final verification in the primary agent.
+Delegate implementation to `fixer` when the change splits into independent
+pieces that can each be built against a written spec, such as a feature built to
+a spec, a well-scoped bug fix, or mechanical edits across many files. Implement
+it yourself when it is one chain of dependent steps, fits in your context, or
+turns on a judgment call: public interfaces, access checks, persisted data
+shapes, and the Opus types below. Short wording edits
 the user dictates, and wording fixes that make no claim about code, are small
 tasks.
 
@@ -43,16 +51,15 @@ tasks.
   3. Review fix diffs with the default inspector; rerun the Opus review only if
      a fix itself touches an Opus type.
   4. Report in your summary that the Opus review ran and what it found.
-- Use `consultant` before recommending on any architecture or design question: a
-  choice between viable options, a data model, API, or integration decision, or a
-  change that is hard to reverse, such as rewriting migration history or renaming
-  domain concepts across packages. Skip it only when the answer is obvious or the
-  question is a small lookup. Also use it for a bug that has climbed the
+- Use `consultant` before recommending on an architecture or design decision that
+  is hard to reverse: a data model, a public API or integration contract, rewriting
+  migration history, or renaming domain concepts across packages. Answer other
+  design questions yourself: the consultant runs your model at higher effort, so
+  it earns its cost only where a wrong call is expensive. Also use it for a bug that has climbed the
   escalation ladder below without a fix. It runs at its configured high effort.
   If a high answer did not fix the bug, first run the cheapest check the
-  consultant named and resume it at high with the result. Pass `effort: "xhigh"`
-  only when no new evidence can be gathered, or for a hard-to-reverse decision;
-  its turn limit may cut an xhigh run short, so narrow the question for it.
+  consultant named and resume it at high with the result. Do not raise
+  it past high; narrow the question instead.
   Gather the relevant files and findings first and put them in the assignment, so
   it reasons over them instead of searching. Include the project instruction
   sections (CLAUDE.md, AGENTS.md) and specs that state a rule on the topic (grep
@@ -64,17 +71,16 @@ tasks.
      had one, go straight to the reruns.
   2. Rerun it one effort level higher, capped at high. If the fixer already ran
      at high, skip to the next step.
-  3. Rerun it with the Agent tool's `model: "opus"` override at medium effort.
-     The drop to medium is intentional: a bigger model starts at a lower effort.
+  3. Take the change over yourself: you run the bigger model and already hold
+     the context.
   4. Only then go to `consultant`.
 
   Each rerun is a fresh spawn with a short brief: the failed diff, the failing
   check output, and whether to keep or discard the earlier edits (prompt caches
-  belong to the model that wrote them). For a fixer assignment that touches an
-  Opus type and has no automated outcome check, start the fixer with
-  `model: "opus"` at medium instead of Sonnet. If that fixer fails (a failed
-  manual or review check counts), step 1 still applies; then rerun it on Opus
-  at high, skip step 3, and go to `consultant`.
+  belong to the model that wrote them). Implement a change that touches an
+  Opus type and has no automated outcome check yourself, not through a fixer.
+  If it fails its check (a failed manual or review check counts), go to
+  `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
   yields unverified prose.

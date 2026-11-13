@@ -51,8 +51,11 @@ specialists when delegation improves speed or quality.
 Call Consultant before dependent implementation when an architecture or design
 decision remains unresolved. Examples include choosing a module boundary,
 deciding where state should live, or comparing migration strategies with
-different risks. Architecture consultation can happen immediately; the
-two-attempt threshold applies to stubborn bugs in Codex and Grok. For those
+different risks. Claude reserves that call for decisions that are hard to
+reverse and answers the rest in the primary agent; the types are under
+[Claude orchestration](#claude-orchestration). Architecture consultation can
+happen immediately; the two-attempt threshold applies to stubborn bugs in
+Codex and Grok. For those
 bugs, consult after two evidence-based attempts have failed, supplying each
 hypothesis, attempted fix, and observed result. Claude Code and OpenCode instead
 climb a fixer escalation ladder, described under [Claude
@@ -143,24 +146,36 @@ inspector for fix diffs, report that it ran) right after the high-risk bullet.
 Approving a plan does not replace review. Other custom agents use their
 configured models.
 
-Claude's policy consults before recommending on architecture or design
-questions, including data models, APIs, integrations, and hard-to-reverse
-choices, except obvious answers and small lookups. When a fixer's result fails
-its checks, it escalates in order: give the fixer a way to verify its own work
-(a precondition, skipped when the assignment already had one), rerun one effort
-level higher (capped at high), rerun with the Opus model override at medium
-effort, then consult. Each rerun is a fresh spawn with the failed diff, the
-failing check output, and a keep-or-discard instruction for earlier edits. A
-fixer assignment that touches an Opus type and has no automated outcome check
-starts on Opus at medium; if it fails, it reruns on Opus at high and then
-goes to the consultant. Consultant runs at high effort; if a high answer did
-not fix the bug, the primary agent first runs the cheapest check it named and
-resumes it, and passes xhigh only when no new evidence can be gathered or for a
-hard-to-reverse decision. For non-trivial changes, meaning those that span more
-than one module or touch public interfaces, access checks, persisted data
-shapes, or tests, the primary agent plans and delegates implementation. Include
-the instruction to leave further delegation to the primary agent when assigning
-Claude's built-in `general-purpose` agent. The built-in `Plan` and
+The delegation rule is a standing request to start the agents it names
+(`runner`, `Explore`, `fixer`, `inspector`, `consultant`) without waiting to be
+asked again. If a session instruction still blocks one, the primary agent says
+so and names the agent it would have used.
+
+Delegate implementation to `fixer` when the change splits into independent
+pieces that can each be built against a written spec, such as a feature built
+to a spec, a well-scoped bug fix, or mechanical edits across many files.
+Implement it in the primary agent when it is one chain of dependent steps, fits
+in context, or turns on a judgment call: public interfaces, access checks,
+persisted data shapes, and the Opus types. Short wording edits the user
+dictates, and wording fixes that make no claim about code, are small tasks.
+
+Claude's policy consults before recommending on an architecture or design
+decision that is hard to reverse: a data model, a public API or integration
+contract, rewriting migration history, or renaming domain concepts across
+packages. The primary agent answers other design questions. Consultant runs at
+its configured high effort. If a high answer did not fix the bug, the primary
+agent first runs the cheapest check it named and resumes the consultant at
+high. Do not raise it past high; narrow the question instead.
+
+When a fixer's result fails its checks, escalate in order: give the fixer a
+way to verify its own work (a precondition, skipped when the assignment already
+had one), rerun one effort level higher (capped at high), take the change over
+in the primary agent, then consult. Each rerun is a fresh spawn with the failed
+diff, the failing check output, and a keep-or-discard instruction for earlier
+edits. Implement a change that touches an Opus type and has no automated
+outcome check in the primary agent. If that check fails, go to the consultant.
+Include the instruction to leave further delegation to the primary agent when
+assigning Claude's built-in `general-purpose` agent. The built-in `Plan` and
 `general-purpose` still inherit the session model; `CLAUDE_CODE_SUBAGENT_MODEL`
 sets the default model for subagents that have none.
 
@@ -186,10 +201,10 @@ Inspector session, so moving Inspector to DeepSeek would review the riskiest
 diffs with the model that wrote them. Revisit the split based on the quality of
 findings and recommendations on your projects.
 
-The OpenCode policy mirrors the [Claude orchestration](#claude-orchestration)
-rules: it plans and delegates non-trivial changes, consults before recommending
-on architecture or design questions, scopes each fixer's checks to its owned
-files, and has the primary agent run full suites once after integration.
+The OpenCode policy plans and delegates non-trivial changes, consults before
+recommending on architecture or design questions, scopes each fixer's checks to
+its owned files, and has the primary agent run full suites once after
+integration.
 High-risk changes always get a review from the default Inspector. For the
 riskiest of them, the deep-review types, the primary agent also runs one deep
 review on the settled diff, without asking first and without passing the
@@ -210,7 +225,8 @@ untrusted input. When a fixer's result fails its checks, the policy escalates in
 order: give it a way to verify its own work, rerun it once as a fresh fixer with
 the failed diff and failing output, then consult. Fixer already runs at its
 top variant, and moving it to GLM would leave reviews on the model that wrote
-the code, so that one rerun replaces Claude's effort and model steps. When a subagent returns partial
+the code, so that one rerun stands in for Claude's effort step and the primary
+agent's takeover. When a subagent returns partial
 results, the primary agent continues it through its `sessionID` instead of
 starting over.
 
