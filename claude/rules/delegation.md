@@ -25,16 +25,16 @@ tasks.
   relevant project constraints in a `Plan` assignment because it skips CLAUDE.md.
   For a read-every-file audit, give each `Explore` one feature directory or at most
   about 40 files, list the files, and have it report which it read in full: it
-  stops at 32 tool calls, so a wider scope returns a sample.
+  stops at its turn limit, so a wider scope returns a sample.
 - Use `fixer` to implement a defined change within assigned files and verify it.
 - Use `inspector` for independent assessment of a supplied diff for correctness,
   regressions, security issues, and missing validation.
   Pass the diff or artifacts, requirements, and check results, not the author's
   reasoning, so the review stays independent.
 - Always review high-risk changes with the default inspector: renames that reach
-  persisted names or codes, removing endpoints or access checks, anything
-  without a rollback, and the Opus types. A user's approval of a plan does not
-  replace review.
+  persisted names or codes, removing endpoints or access checks, and anything
+  without a rollback. The Opus types get the Opus review below in its place. A
+  user's approval of a plan does not replace review.
 - Opus types: migrations, including squashing or rewriting history;
   authentication or authorization, including sessions, tokens, and crypto;
   tenant isolation; payment, billing, or financial records, such as balances or
@@ -42,10 +42,10 @@ tasks.
   record, but not features that only add one; changes to how sensitive or
   personal data is encrypted, masked, or revealed, or new paths that could copy
   it into logs, errors, or audit entries; and data deletion. For a diff touching
-  one, also run one Opus review:
+  one, run one Opus review:
   1. On the settled diff before the PR or final handoff, without asking the
      user, spawn `inspector` with the Agent tool's `model: "opus"`
-     override at high effort. Use the default inspector until then.
+     override at high effort and a budget of about 30 tool calls.
   2. Give it the usual inspector inputs, including the baseline, but not earlier
      inspector findings.
   3. Review fix diffs with the default inspector; rerun the Opus review only if
@@ -78,7 +78,7 @@ tasks.
   Each rerun is a fresh spawn with a short brief: the failed diff, the failing
   check output, and whether to keep or discard the earlier edits (prompt caches
   belong to the model that wrote them). Implement a change that touches an
-  Opus type and has no automated outcome check yourself, not through a fixer.
+  Opus type yourself, not through a fixer.
   If it fails its check (a failed manual or review check counts), go to
   `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
@@ -91,8 +91,8 @@ tasks.
   when no specialist fits. It can spawn agents, so tell it in the assignment not
   to delegate further.
 - Use each agent's configured model unless this policy names another. Choose a
-  supported reasoning effort for its task: low for simple lookups, medium for
-  routine implementation and tracing, and high for complex investigation or
+  supported reasoning effort for its task: medium for
+  lookups, routine implementation and tracing, and high for complex investigation or
   review. Respect explicit user requests for effort.
 - Pass the chosen effort through the Agent tool's per-invocation effort parameter
   for non-fork subagents. Respect the `CLAUDE_CODE_EFFORT_LEVEL` environment

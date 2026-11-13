@@ -28,7 +28,7 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | Tool | `runner` | `fixer` | `inspector` | `consultant` | `tracker` | `default` | `explore` | `general` |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex | `gpt-6-luna` | `gpt-6.1-terra` | `gpt-6.1-sol` | `gpt-6-astra` | `gpt-6-luna` | `gpt-6.1-sol` | N/A | N/A |
-| Claude Code | `claude-haiku-5-5`, low | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | `claude-sonnet-5-5`, medium | N/A |
+| Claude Code | `claude-haiku-5-5`, medium | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | `claude-sonnet-5-5`, medium | N/A |
 | OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max | `opencode-go/glm-5.3-flash`, high | `opencode-go/glm-5.3-flash`, max | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
 | Grok Build | `grok-4.7`, low | `grok-4.7`, medium | `grok-4.7`, high | `grok-4.7`, xhigh | N/A | N/A | N/A | N/A |
 
@@ -58,7 +58,7 @@ effort levels are in [docs/orchestration.md](docs/orchestration.md).
 
 | Agent | Assignment | Configuration |
 | --- | --- | --- |
-| `runner` | Bounded factual lookup or file discovery with references | Haiku 5.5, low; max 15 turns, reports from 12 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
+| `runner` | Bounded factual lookup or file discovery with references | Haiku 5.5, medium; max 15 turns, reports from 12 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
 | `fixer` | Implement an agreed change within owned files and verify it | Sonnet 5.5, medium; no turn limit; inherited tools, including shell, editing, skills, and MCP; Agent disabled |
 | `inspector` | Review a supplied diff for concrete defects and explain their impact | Sonnet 5.5, high; max 60 turns, reports from 50 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
 | `consultant` | Advise on architecture, design trade-offs, and stubborn bugs; use sparingly | Opus 5.5, high; max 30 turns, reports from 24 tool calls; Read, Glob, Grep, WebFetch, WebSearch |
@@ -66,8 +66,9 @@ effort levels are in [docs/orchestration.md](docs/orchestration.md).
 | `Plan` built-in | Gather research during plan mode | Built-in read-only tools |
 | `general-purpose` built-in | Mixed investigation and action without a matching specialist | Built-in available tools |
 
-High-risk changes always get an Inspector review. The riskiest also get one
-Opus review at high effort; the delegation rule
+High-risk changes get an Inspector review. Opus types get that review from
+Opus at high effort, with a budget of about 30 tool calls, instead of the
+default Inspector. The delegation rule
 ([claude/rules/delegation.md](claude/rules/delegation.md)) lists which changes
 qualify and the steps.
 

@@ -4,7 +4,7 @@ description: Use for bounded read-only lookups, file discovery, and factual chec
 model: claude-haiku-5-5
 # Do not add Bash here: on macOS it removes Glob and Grep.
 tools: Read, Glob, Grep, WebFetch, WebSearch
-effort: low
+effort: medium
 maxTurns: 15
 ---
 
