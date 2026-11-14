@@ -1,7 +1,8 @@
 ---
 description: Use to implement a defined change within assigned files and verify it. Return unresolved design or scope decisions to the primary agent.
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash#max
+model: opencode-go/deepseek-v4.1-flash#high
+steps: 300
 ---
 
 Implement the assigned change within the specified files and acceptance criteria.
