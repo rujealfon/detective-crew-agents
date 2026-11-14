@@ -13,7 +13,7 @@ levels, and the fixer benchmark.
   and missing validation with read-only tools.
 - `consultant` (all four providers) advises on architecture, design trade-offs,
   and stubborn bugs with inspection tools. It uses Astra in Codex, Opus at high
-  effort in Claude Code, GLM-5.3-Flash at max in OpenCode, and Grok 4.7 at xhigh
+  effort in Claude Code, Claude Sonnet at xhigh in OpenCode, and Grok 4.7 at xhigh
   in Grok Build; the primary agent stays on your main model. See [consultation
   and handoffs](#consultation-and-handoffs) for when to call it.
 - `tracker` (Codex only) traces behavior, dependencies, and likely causes across
@@ -193,13 +193,18 @@ The role table lives in the [README](../README.md#opencode-orchestration).
 
 Follow the [consultation and handoff guidance](#consultation-and-handoffs),
 using `explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1
-Flash runs Runner and `explore` at high, and Fixer and `general` at max.
-GLM-5.3-Flash runs Inspector at high and Consultant at max, so reviews always
-come from a different model than the one that wrote the code. Watch
-GLM-5.3-Flash usage in the console. Keep Inspector on GLM: the deep review is an
-Inspector session, so moving Inspector to DeepSeek would review the riskiest
-diffs with the model that wrote them. Revisit the split based on the quality of
-findings and recommendations on your projects.
+Flash runs Runner, `explore`, and Fixer at high, and `general` at max. Claude
+Sonnet, through OpenCode's Claude Agent provider (`claude-agent/sonnet`), runs
+Inspector at high and Consultant at xhigh, so reviews always come from a
+different model family than the one that wrote the code. On Artificial
+Analysis's Intelligence Index, Sonnet's score rises steeply up to xhigh, while
+max adds little at about twice the time per task. The Claude Agent provider
+runs your local `claude` login, so reviews draw on the same plan limits as a
+Claude primary agent; it runs tool calls one at a time. Keep Inspector off
+DeepSeek: the deep review is an Inspector session, so moving Inspector to
+DeepSeek would review the riskiest diffs with the model that wrote them.
+Revisit the split based on the quality of findings and recommendations on your
+projects.
 
 The OpenCode policy plans and delegates non-trivial changes, consults before
 recommending on architecture or design questions, scopes each fixer's checks to
@@ -212,28 +217,30 @@ earlier findings, and reports that it ran and what it found. The deep review is
 a fresh Inspector session, never a continuation of the iteration review, whose
 assignment carries a focus brief: look for subtle defects an earlier pass could
 miss, such as interleavings, edge-case states, bypasses of checks, and silent or
-irreversible failures. The `subagent` tool takes a per-call `model` override
-with a variant (`provider/model#variant`), so the policy launches it with
-`opencode-go/glm-5.3-flash#max` and no separate max-variant agent is needed.
-The tool's own guidance says to set `model` only when the user asks; the policy
-names the exact ID, which counts as that request. If you change Inspector's
-model, update the ID in the policy too.
+irreversible failures. It runs on Inspector's configured model with no
+`model` override, so changing Inspector's model needs no policy edit.
 [opencode/AGENTS.md](../opencode/AGENTS.md) lists the types and the four steps
 right after the high-risk bullet. They match Claude's Opus
 types, plus secrets, CI/CD, or infrastructure changes and new paths for
 untrusted input. When a fixer's result fails its checks, the policy escalates in
 order: give it a way to verify its own work, rerun it once as a fresh fixer with
-the failed diff and failing output, then consult. Fixer already runs at its
-top variant, and moving it to GLM would leave reviews on the model that wrote
-the code, so that one rerun stands in for Claude's effort step and the primary
-agent's takeover. When a subagent returns partial
+the failed diff and failing output, then consult. The rerun uses the
+`subagent` tool's per-call `model` override
+(`opencode-go/deepseek-v4.1-flash#max`), raising Fixer from high to its top
+variant while keeping it off Inspector's model. The tool's own guidance says to
+set `model` only when the user asks; the policy names the exact ID, which counts
+as that request. That one rerun stands in for Claude's effort step and the
+primary agent's takeover. When a subagent returns partial
 results, the primary agent continues it through its `sessionID` instead of
 starting over.
 
-Runner, Inspector, and Consultant set `steps` limits of 15, 60, and 30, and the `explore` override sets 40. On the last step OpenCode
-removes tools and asks the agent to summarize, so a long task still ends with a
-report; continuing the agent through its `sessionID` resets the allowance. Fixer
-and `general` have no step limit, so an edit is never cut off halfway.
+Runner, Inspector, Consultant, and Fixer set `steps` limits of 15, 60, 30, and
+300, and the `explore` override sets 60. On the last step OpenCode removes tools
+and asks the agent to summarize, so a long task still ends with a report;
+continuing the agent through its `sessionID` resets the allowance. Fixer's limit
+sits well above a typical implementation run and only stops runaway ones; a
+fixer that reaches it reports its state and can be continued. `general` has no
+step limit.
 
 Inspector and Consultant deny all permissions, then allow only
 `read`, `glob`, `grep`, `webfetch`, and `websearch`. Shell execution, edits, and
@@ -419,8 +426,10 @@ subagent
 effort](https://code.claude.com/docs/en/sub-agents#choose-an-effort-level)
 
 Claude uses explicit `claude-haiku-5-5`, `claude-sonnet-5-5`, and
-`claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` provider and
-encodes effort as a model variant, such as `#medium`, `#high`, or `#max`. Access
+`claude-opus-5-5` model IDs. OpenCode uses the `opencode-go` and
+`claude-agent` providers and encodes effort as a model variant, such as
+`#medium`, `#high`, `#xhigh`, or `#max`. The `claude-agent` provider needs
+Claude Code installed and signed in. Access
 to these models and variants depends on your account and provider. Check that
 they are available before using the agents. OpenCode Go blocks DeepSeek until
 the workspace allows the Global region; see [install](install.md). [Claude

@@ -213,13 +213,13 @@ class UninstallTests(unittest.TestCase):
         expected_permissions = ['  - action: "*"', '    resource: "*"', '    effect: deny']
         for action in ("read", "glob", "grep", "webfetch", "websearch"):
             expected_permissions.extend((f"  - action: {action}", '    resource: "*"', '    effect: allow'))
-        for agent, model in (("consultant", "glm-5.3-flash#max"),
-                             ("inspector", "glm-5.3-flash#high")):
+        for agent, model in (("consultant", "claude-agent/sonnet#xhigh"),
+                             ("inspector", "claude-agent/sonnet#high")):
             with self.subTest(agent=agent):
                 installed = self.home / f".config/opencode/agents/{agent}.md"
                 self.assertEqual(installed.read_bytes(), (ROOT / f"opencode/{agent}.md").read_bytes())
                 frontmatter = installed.read_text().split("---\n", 2)[1]
-                self.assertIn(f"model: opencode-go/{model}\n", frontmatter)
+                self.assertIn(f"model: {model}\n", frontmatter)
                 self.assertIn("mode: subagent\n", frontmatter)
                 # Exact allowlist plus the deny-all rule excludes shell, edits, and subagents.
                 self.assertEqual(frontmatter.split("permissions:\n", 1)[1].splitlines(), expected_permissions)
@@ -232,6 +232,9 @@ class UninstallTests(unittest.TestCase):
         self.assertNotIn("deep-inspector", policy)
         self.assertIn("has climbed the escalation ladder below without a fix", flat)
         self.assertIn("When a fixer's result fails its checks, escalate in this order:", flat)
+        self.assertIn("launch a fresh `inspector` session on its configured model", flat)
+        self.assertNotIn("glm-5.3-flash", policy)
+        self.assertIn('`model: "opencode-go/deepseek-v4.1-flash#max"` override', flat)
         self.assertFalse((self.home / ".config/opencode/agents/deep-inspector.md").exists())
         self.assertNotIn("deep-review.md", policy)
         self.assertFalse((self.home / ".config/opencode/docs").exists())
@@ -304,18 +307,17 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(opencode_doc.read_bytes(), opencode_contents)
 
     def test_opencode_agent_step_limits(self):
-        for agent, steps in (("runner", "15"), ("inspector", "60"), ("consultant", "30")):
+        for agent, steps in (("runner", "15"), ("inspector", "60"), ("consultant", "30"),
+                             ("fixer", "300")):
             with self.subTest(agent=agent):
                 frontmatter = (self.home / f".config/opencode/agents/{agent}.md").read_text().split("---\n", 2)[1]
                 self.assertIn(f"steps: {steps}\n", frontmatter)
-        fixer = (self.home / ".config/opencode/agents/fixer.md").read_text().split("---\n", 2)[1]
-        self.assertNotIn("steps:", fixer)
         agents = json.loads((self.home / ".config/opencode/opencode.jsonc").read_text())["agents"]
-        self.assertEqual(agents["explore"]["steps"], 40)
+        self.assertEqual(agents["explore"]["steps"], 60)
         self.assertNotIn("steps", agents["general"])
 
-    def test_opencode_uses_only_deepseek_and_glm(self):
-        allowed = {"opencode-go/deepseek-v4.1-flash", "opencode-go/glm-5.3-flash"}
+    def test_opencode_uses_only_deepseek_and_sonnet(self):
+        allowed = {"opencode-go/deepseek-v4.1-flash", "claude-agent/sonnet"}
         models = []
         for agent in ("runner", "fixer", "inspector", "consultant"):
             text = (self.home / f".config/opencode/agents/{agent}.md").read_text()
@@ -324,8 +326,9 @@ class UninstallTests(unittest.TestCase):
         models.extend(settings["model"] for settings in config["agents"].values())
         self.assertEqual({model.split("#", 1)[0] for model in models}, allowed)
         self.assertEqual(models[0], "opencode-go/deepseek-v4.1-flash#high")
-        self.assertEqual(models[1], "opencode-go/deepseek-v4.1-flash#max")
-        self.assertEqual(models[2], "opencode-go/glm-5.3-flash#high")
+        self.assertEqual(models[1], "opencode-go/deepseek-v4.1-flash#high")
+        self.assertEqual(models[2], "claude-agent/sonnet#high")
+        self.assertEqual(models[3], "claude-agent/sonnet#xhigh")
         self.assertEqual(config["agents"]["explore"]["model"], "opencode-go/deepseek-v4.1-flash#high")
 
     def test_opencode_two_model_upgrade_backs_up_muse_spark_files(self):

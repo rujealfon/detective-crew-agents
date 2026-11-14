@@ -42,14 +42,12 @@ small tasks.
   deserialization, uploads, redirects, or server-side fetches of user-supplied
   URLs; and data deletion. For a diff touching one, also run one deep review:
   1. On the settled diff before the PR or final handoff, without asking the
-     user, launch a fresh `inspector` session with the `subagent` tool's
-     `model: "opencode-go/glm-5.3-flash#max"` override (Inspector's model at
-     its max variant; this policy is the user's explicit request for that
-     override); never continue the session that did the iteration review.
-     Put in the assignment: "Review independently; you will not receive
-     earlier review findings. Look for subtle defects an earlier pass could
-     miss: interleavings, edge-case states, bypasses of checks, and silent or
-     irreversible failures." Use the default inspector until then.
+     user, launch a fresh `inspector` session on its configured model; never
+     continue the session that did the iteration review. Put in the
+     assignment: "Review independently; you will not receive earlier review
+     findings. Look for subtle defects an earlier pass could miss:
+     interleavings, edge-case states, bypasses of checks, and silent or
+     irreversible failures."
   2. Give it the usual inspector inputs, including the baseline, but not earlier
      inspector findings.
   3. Review fix diffs with the default inspector; rerun the deep review only if
@@ -72,12 +70,13 @@ small tasks.
   1. Give it a way to verify its own work, such as a failing test, a build, or a
      script. This is a precondition, not an attempt; if the assignment already
      had one, go straight to the rerun.
-  2. Rerun it once as a fresh `fixer` with a short brief: the failed diff, the
-     failing check output, and whether to keep or discard the earlier edits.
-     Keep `fixer` on its configured model: it already runs at its top variant,
-     and switching it to the reviewers' model would leave reviews on the model
-     that wrote the code. This one fresh rerun replaces Claude's effort and
-     model steps.
+  2. Rerun it once as a fresh `fixer` with the `subagent` tool's
+     `model: "opencode-go/deepseek-v4.1-flash#max"` override (Fixer's model at
+     its max variant; this policy is the user's explicit request for that
+     override) and a short brief: the failed diff, the failing check output,
+     and whether to keep or discard the earlier edits. Keep the rerun off the
+     reviewers' model, so reviews never come from the model that wrote the
+     code. This one fresh rerun replaces Claude's effort and model steps.
   3. Only then go to `consultant`.
 - Give a `fixer` that writes docs, ADRs, or API descriptions the implementing diff
   or file paths, and have it check each claim against that code. A brief alone
@@ -108,8 +107,9 @@ small tasks.
   with the repo's own linter, autofixing only those paths, not its repo-wide
   lint or fix command). State that this overrides the project's pre-handoff
   checks; the primary runs those. Tell it to also run the type-check for its
-  owned paths and the repo's fast structural or guard checks when the repo names
-  them, using the command the repo documents. Tell it to run data-writing checks
+  owned paths when a scoped command exists. Assign one owner for checkout-wide
+  type-check, structural, and guard checks; the other workers leave those to
+  that owner. Use the repo's documented commands. Tell it to run data-writing checks
   only against a disposable environment (the repo's documented test setup when it
   is neither shared nor persistent, or a scratch database it creates and tears
   down), never shared or persistent data or a database another running fixer

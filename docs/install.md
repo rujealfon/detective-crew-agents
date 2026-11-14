@@ -53,16 +53,24 @@ OpenCode's `runner`, `fixer`, `inspector`, and `consultant` definitions live in
 `~/.config/opencode/agents/*.md`. Its `explore` and `general` model, description, and step-limit overrides
 live in `~/.config/opencode/opencode.jsonc`.
 
-The OpenCode agents use two [OpenCode Go](https://opencode.ai/docs/go/) models:
-DeepSeek V4.1 Flash for `runner`, `explore`, `fixer`, and `general`, and
-GLM-5.3-Flash for `inspector` and `consultant`. By default, Go allows only the Europe and
-United States regions, which blocks DeepSeek. Before you use the agents, have a
-workspace owner or admin open **Settings › Privacy** in the
-[OpenCode Console](https://opencode.ai/console) and select **Global** under
-**Regions**. If you skip this, every agent except the two GLM agents fails. GLM-5.3-Flash
-needs no privacy change. DeepSeek requests count double against your Go
+The OpenCode agents use two models. DeepSeek V4.1 Flash, through
+[OpenCode Go](https://opencode.ai/docs/go/), runs `runner`, `explore`, `fixer`,
+and `general`. Claude Sonnet, through OpenCode's
+[Claude Agent provider](https://opencode.ai/v2/docs/providers#claude-agent)
+(`claude-agent/sonnet`), runs `inspector` and `consultant`.
+
+By default, Go allows only the Europe and United States regions, which blocks
+DeepSeek. Before you use the agents, have a workspace owner or admin open
+**Settings › Privacy** in the [OpenCode Console](https://opencode.ai/console)
+and select **Global** under **Regions**. If you skip this, `runner`, `explore`,
+`fixer`, and `general` fail. DeepSeek requests count double against your Go
 allowance during peak hours: 01:00–04:00 and 06:00–10:00 UTC, Monday through
 Friday.
+
+The Claude Agent provider runs your installed `claude` program with its existing
+login, so install Claude Code and sign in before using `inspector` or
+`consultant`. Usage draws on whatever that login bills: a Claude plan's usage
+limits, or API charges for an API-key login.
 
 For project-specific instructions, put `AGENTS.md` or `CLAUDE.md` inside the
 repository. Claude Code v2.1.277 and later can load project `AGENTS.md`, with
