@@ -219,7 +219,8 @@
   ],
   ".claude/agents/inspector.md": [
     "99a884a917889e3665ffaf7f0bda3ef0779d386eaac467e0c62fafc21e2f1352",
-    "2ee921903adc558bef77cc693b466266cc881d02ab2f011a541e251abf3036eb"
+    "2ee921903adc558bef77cc693b466266cc881d02ab2f011a541e251abf3036eb",
+    "fd7bc6096b54de0b2fa13a17befcd1f817546cba61dc3ccbc10597c040c812f3"
   ],
   ".claude/agents/consultant.md": [
     "53297dd7b7f56decbf36ea0905b4b1f6e9c314c452eb27c476261ccf4a4f94b9",
@@ -248,7 +249,8 @@
   ".config/opencode/agents/consultant.md": [
     "414568edba511683d22e06f9574e8ecacba06b7fd05c940059f11a41480e24e3",
     "fc5d6b82f5ac4ae4650bcb8f96589f5505c38aa35e8ebd191ce7fd2db5003c4f",
-    "fc94d80b08116a7b667de75838f9d63ef29664719af1822df54446fd9f4eae44"
+    "fc94d80b08116a7b667de75838f9d63ef29664719af1822df54446fd9f4eae44",
+    "6eab89356e0e131f4d360c8d63165cf591f50d0a8effda6b0daf10ba1cb22ef4"
   ],
   ".claude/docs/opus-review.md": [
     "01001d5fa42e3dbd38f00109bca8b9d9449364579704934718d4c3cd2563186f"

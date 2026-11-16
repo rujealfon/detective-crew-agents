@@ -213,7 +213,7 @@ class UninstallTests(unittest.TestCase):
         expected_permissions = ['  - action: "*"', '    resource: "*"', '    effect: deny']
         for action in ("read", "glob", "grep", "webfetch", "websearch"):
             expected_permissions.extend((f"  - action: {action}", '    resource: "*"', '    effect: allow'))
-        for agent, model in (("consultant", "claude-agent/sonnet#xhigh"),
+        for agent, model in (("consultant", "claude-agent/opus#high"),
                              ("inspector", "claude-agent/sonnet#high")):
             with self.subTest(agent=agent):
                 installed = self.home / f".config/opencode/agents/{agent}.md"
@@ -316,8 +316,9 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(agents["explore"]["steps"], 60)
         self.assertNotIn("steps", agents["general"])
 
-    def test_opencode_uses_only_deepseek_and_sonnet(self):
-        allowed = {"opencode-go/deepseek-v4.1-flash", "claude-agent/sonnet"}
+    def test_opencode_uses_only_deepseek_and_claude(self):
+        allowed = {"opencode-go/deepseek-v4.1-flash", "claude-agent/sonnet",
+                   "claude-agent/opus"}
         models = []
         for agent in ("runner", "fixer", "inspector", "consultant"):
             text = (self.home / f".config/opencode/agents/{agent}.md").read_text()
@@ -328,7 +329,7 @@ class UninstallTests(unittest.TestCase):
         self.assertEqual(models[0], "opencode-go/deepseek-v4.1-flash#high")
         self.assertEqual(models[1], "opencode-go/deepseek-v4.1-flash#high")
         self.assertEqual(models[2], "claude-agent/sonnet#high")
-        self.assertEqual(models[3], "claude-agent/sonnet#xhigh")
+        self.assertEqual(models[3], "claude-agent/opus#high")
         self.assertEqual(config["agents"]["explore"]["model"], "opencode-go/deepseek-v4.1-flash#high")
 
     def test_opencode_two_model_upgrade_backs_up_muse_spark_files(self):
