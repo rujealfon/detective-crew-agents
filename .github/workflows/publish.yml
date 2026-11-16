@@ -15,16 +15,17 @@ jobs:
   publish:
     name: Publish and release
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: write
+      issues: write
+      pull-requests: write
       id-token: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -38,97 +39,12 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: '24'
-          registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Publish new version
-        id: publish
-        run: |
-          set -euo pipefail
-          name=$(node -p "require('./package.json').name")
-          version=$(node -p "require('./package.json').version")
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          if npm view "${name}@${version}" version >/dev/null 2>&1; then
-            echo "${name}@${version} is already on npm"
-            echo "published=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          npm publish --access public
-          echo "published=true" >> "$GITHUB_OUTPUT"
+      - name: Install release tool
+        run: npm clean-install
 
-      - name: Tag and release
+      - name: Release
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          version="${{ steps.publish.outputs.version }}"
-          published="${{ steps.publish.outputs.published }}"
-          tag="v${version}"
-
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "${tag} already has a GitHub release"
-            exit 0
-          fi
-
-          # A new publish tags the commit npm just received. A retry, or the
-          # already-published baseline, tags the commit npm recorded. An older
-          # commit with the same version is not that tree.
-          if [ "$published" = "true" ]; then
-            target="$GITHUB_SHA"
-          else
-            name=$(node -p "require('./package.json').name")
-            target=$(npm view "${name}@${version}" gitHead)
-            if ! printf '%s' "$target" | grep -Eq '^[0-9a-f]{40}$'; then
-              echo "npm did not record a commit for ${name}@${version}" >&2
-              exit 1
-            fi
-          fi
-          git merge-base --is-ancestor "$target" HEAD
-
-          # A failed list must not be treated as "no releases", or a later
-          # release would keep the short note forever.
-          if ! release_count=$(gh release list --limit 1 --json tagName --jq 'length'); then
-            echo "could not list GitHub releases" >&2
-            exit 1
-          fi
-          if [ "$release_count" != "0" ] && [ "$release_count" != "1" ]; then
-            echo "unexpected release count: ${release_count}" >&2
-            exit 1
-          fi
-
-          # Create the tag before the release. The release API rejects
-          # GITHUB_TOKEN when target_commitish is a SHA with no branch or tag
-          # ref and that commit's workflow files differ from the default branch.
-          set +e
-          tag_meta=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" --jq '[.object.type, .object.sha] | join(" ")' 2>&1)
-          tag_rc=$?
-          set -e
-          if [ "$tag_rc" -eq 0 ]; then
-            tag_type=${tag_meta%% *}
-            tag_sha=${tag_meta#* }
-            if [ "$tag_type" = "tag" ]; then
-              tag_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_sha}" --jq '.object.sha')
-            elif [ "$tag_type" != "commit" ]; then
-              echo "tag ${tag} has unexpected object type ${tag_type}" >&2
-              exit 1
-            fi
-            if [ "$tag_sha" != "$target" ]; then
-              echo "tag ${tag} points at ${tag_sha}, not ${target}" >&2
-              exit 1
-            fi
-          elif ! printf '%s\n' "$tag_meta" | grep -q 'HTTP 404'; then
-            echo "could not check tag ${tag}: ${tag_meta}" >&2
-            exit 1
-          else
-            gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
-              -f ref="refs/tags/${tag}" \
-              -f sha="$target" >/dev/null
-          fi
-
-          # The tag already exists, so omit --target. Passing the SHA again
-          # re-triggers the workflow-scope check this sequence avoids.
-          if [ "$release_count" = "1" ]; then
-            gh release create "$tag" --title "$tag" --generate-notes
-          else
-            gh release create "$tag" --title "$tag" --notes "Release ${tag}."
-          fi
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release

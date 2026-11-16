@@ -24,12 +24,8 @@ def installed_files():
     return TUPLE.findall(block)
 
 
-def version_tuple(raw):
-    return tuple(int(part) for part in raw.strip().split("."))
-
-
 class ReleaseHashesTest(unittest.TestCase):
-    def test_changed_sources_record_previous_hash_and_bump_version(self):
+    def test_changed_sources_record_previous_hash(self):
         resolved = git("rev-parse", "--verify", f"{BASE_REF}^{{commit}}")
         if resolved.returncode != 0:
             message = (
@@ -66,18 +62,6 @@ class ReleaseHashesTest(unittest.TestCase):
                 f"{source} changed since {BASE_REF}; add the sha256 of the released "
                 f"version ({digest}) to previous-install-hashes.json under {target!r} "
                 "so --update can replace it.",
-            )
-
-        if changed:
-            base_pkg = git("show", f"{base}:package.json")
-            self.assertEqual(base_pkg.returncode, 0, "package.json missing at base")
-            old = version_tuple(json.loads(base_pkg.stdout)["version"])
-            new = version_tuple(json.loads((ROOT / "package.json").read_text())["version"])
-            self.assertGreater(
-                new,
-                old,
-                f"{', '.join(changed)} changed since {BASE_REF}; bump package.json "
-                f"version above {'.'.join(map(str, old))} so publish does not skip.",
             )
 
 
