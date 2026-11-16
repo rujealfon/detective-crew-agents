@@ -13,9 +13,9 @@ levels, and the fixer benchmark.
   and missing validation with read-only tools.
 - `consultant` (all four providers) advises on architecture, design trade-offs,
   and stubborn bugs with inspection tools. It uses Astra in Codex, Opus at high
-  effort in Claude Code, Claude Sonnet at xhigh in OpenCode, and Grok 4.7 at xhigh
-  in Grok Build; the primary agent stays on your main model. See [consultation
-  and handoffs](#consultation-and-handoffs) for when to call it.
+  effort in Claude Code and in OpenCode, and Grok 4.7 at xhigh in Grok Build;
+  the primary agent stays on your main model. See [consultation and
+  handoffs](#consultation-and-handoffs) for when to call it.
 - `tracker` (Codex only) traces behavior, dependencies, and likely causes across
   files without editing code.
 - `default` is Codex's subagent for bounded mixed investigation and
@@ -192,15 +192,15 @@ verification in the primary agent.
 The role table lives in the [README](../README.md#opencode-orchestration).
 
 Follow the [consultation and handoff guidance](#consultation-and-handoffs),
-using `explore` for codebase tracing. OpenCode uses two models. DeepSeek V4.1
+using `explore` for codebase tracing. OpenCode uses three models. DeepSeek V4.1
 Flash runs Runner, `explore`, and Fixer at high, and `general` at max. Claude
 Sonnet, through OpenCode's Claude Agent provider (`claude-agent/sonnet`), runs
-Inspector at high and Consultant at xhigh, so reviews always come from a
-different model family than the one that wrote the code. On Artificial
-Analysis's Intelligence Index, Sonnet's score rises steeply up to xhigh, while
-max adds little at about twice the time per task. The Claude Agent provider
-runs your local `claude` login, so reviews draw on the same plan limits as a
-Claude primary agent; it runs tool calls one at a time. Keep Inspector off
+Inspector at high. Claude Opus runs Consultant at high, so reviews and advice
+always come from a different model family than the one that wrote the code.
+Inspector keeps high effort for review, and an unresolved design question gets
+the stronger model instead of more effort on the reviewer. The Claude Agent
+provider runs your local `claude` login, so reviews draw on the same plan limits
+as a Claude primary agent; it runs tool calls one at a time. Keep Inspector off
 DeepSeek: the deep review is an Inspector session, so moving Inspector to
 DeepSeek would review the riskiest diffs with the model that wrote them.
 Revisit the split based on the quality of findings and recommendations on your

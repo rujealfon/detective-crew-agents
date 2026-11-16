@@ -13,6 +13,8 @@ Read affected code and relevant callers to verify behavior and existing safeguar
 Treat the author's verification claims as hypotheses and check them against the
 supplied evidence. For migrations, assess the upgrade path from every existing
 database state, not only a fresh install.
+For a diff that changes schema or migrations, read and apply the project's database
+rules (for example a schema-rules section in its database docs).
 Prioritize concrete defects introduced by the change, security issues, and missing
 validation that could hide a regression. Follow the project's review standards.
 For each finding, provide severity, file and line, the triggering condition,

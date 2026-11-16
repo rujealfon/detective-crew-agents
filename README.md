@@ -29,7 +29,7 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Codex | `gpt-6-luna` | `gpt-6.1-terra` | `gpt-6.1-sol` | `gpt-6-astra` | `gpt-6-luna` | `gpt-6.1-sol` | N/A | N/A |
 | Claude Code | `claude-haiku-5-5`, medium | `claude-sonnet-5-5`, medium | `claude-sonnet-5-5`, high | `claude-opus-5-5`, high | N/A | N/A | `claude-sonnet-5-5`, medium | N/A |
-| OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, high | `claude-agent/sonnet`, high | `claude-agent/sonnet`, xhigh | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
+| OpenCode | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, high | `claude-agent/sonnet`, high | `claude-agent/opus`, high | N/A | N/A | `opencode-go/deepseek-v4.1-flash`, high | `opencode-go/deepseek-v4.1-flash`, max |
 | Grok Build | `grok-4.7`, low | `grok-4.7`, medium | `grok-4.7`, high | `grok-4.7`, xhigh | N/A | N/A | N/A | N/A |
 
 N/A means the tool doesn't get that role. Codex leaves effort to the Chief at
@@ -93,18 +93,19 @@ Chief picks it for each task when spawning.
 | `runner` | Bounded factual lookup or file discovery | DeepSeek V4.1 Flash, high; max 15 steps; inherited permissions |
 | `fixer` | Implement an agreed change and verify it | DeepSeek V4.1 Flash, high; max 300 steps; inherited permissions |
 | `inspector` | Review a supplied diff for concrete defects | Claude Sonnet (Claude Agent), high; max 60 steps; inspection tools |
-| `consultant` | Advise on architecture, design trade-offs, and stubborn bugs | Claude Sonnet (Claude Agent), xhigh; max 30 steps; inspection tools |
+| `consultant` | Advise on architecture, design trade-offs, and stubborn bugs | Claude Opus (Claude Agent), high; max 30 steps; inspection tools |
 | `explore` | Trace behavior and dependencies across files | DeepSeek V4.1 Flash, high; max 60 steps; built-in exploration permissions |
 | `general` | Mixed investigation and implementation | DeepSeek V4.1 Flash, max; built-in general permissions |
 
 Inspector and Consultant can only read, search, and fetch. `explore` and
 `general` are OpenCode's built-in agents with this setup's models.
 
-OpenCode uses two models. DeepSeek V4.1 Flash does the lookups and
-implementation, and Claude Sonnet reviews and advises through OpenCode's Claude
-Agent provider, so Inspector never reviews code written by its own model. The
-Claude Agent provider runs your local `claude` login and draws on that plan's
-usage limits. High-risk changes always get an Inspector review. The riskiest
+OpenCode uses three models. DeepSeek V4.1 Flash does the lookups and
+implementation, Claude Sonnet reviews through OpenCode's Claude Agent provider,
+and Claude Opus advises through the same provider, so Inspector never reviews
+code written by its own model. The Claude Agent provider runs your local
+`claude` login and draws on that plan's usage limits. High-risk changes always
+get an Inspector review. The riskiest
 also get one deep review from a fresh Inspector session with a focus brief;
 [opencode/AGENTS.md](opencode/AGENTS.md) lists which changes qualify and the
 steps.

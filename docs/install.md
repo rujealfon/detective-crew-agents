@@ -53,11 +53,12 @@ OpenCode's `runner`, `fixer`, `inspector`, and `consultant` definitions live in
 `~/.config/opencode/agents/*.md`. Its `explore` and `general` model, description, and step-limit overrides
 live in `~/.config/opencode/opencode.jsonc`.
 
-The OpenCode agents use two models. DeepSeek V4.1 Flash, through
+The OpenCode agents use three models. DeepSeek V4.1 Flash, through
 [OpenCode Go](https://opencode.ai/docs/go/), runs `runner`, `explore`, `fixer`,
 and `general`. Claude Sonnet, through OpenCode's
 [Claude Agent provider](https://opencode.ai/v2/docs/providers#claude-agent)
-(`claude-agent/sonnet`), runs `inspector` and `consultant`.
+(`claude-agent/sonnet`), runs `inspector`. Claude Opus
+(`claude-agent/opus`) runs `consultant`.
 
 By default, Go allows only the Europe and United States regions, which blocks
 DeepSeek. Before you use the agents, have a workspace owner or admin open

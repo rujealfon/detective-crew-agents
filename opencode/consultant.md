@@ -1,7 +1,7 @@
 ---
 description: Use for architecture and design decisions, trade-off analysis, and bugs the escalation ladder has not fixed. Do not use for routine work.
 mode: subagent
-model: claude-agent/sonnet#xhigh
+model: claude-agent/opus#high
 steps: 30
 permissions:
   - action: "*"
