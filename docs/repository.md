@@ -89,7 +89,7 @@ detective-crew-agents/
 | `install-claude-opencode.py` | Compatibility entry point that calls the combined installer |
 | `previous-install-hashes.json` | Fingerprints of recognized earlier configurations for safe upgrades |
 | `.github/workflows/ci.yml` | Installer tests on Ubuntu for pushes, pull requests, and manual runs |
-| `.github/workflows/publish.yml` | Runs those tests on `main`, then publishes when the version is not already on npm |
+| `.github/workflows/publish.yml` | Runs those tests on `main`, publishes when the version is not already on npm, then tags `v<version>` and creates a GitHub release |
 | `tools/session-usage.py` | Read-only local Codex session usage report; not installed or published |
 | `tests/test_uninstall.py` | Tests installation, upgrades, removal, and preservation in temporary home directories |
 | `tests/test_session_usage.py` | Synthetic tests for the local Codex usage report |
@@ -109,7 +109,9 @@ home directory with `grok inspect --json`.
 for pushes, pull requests, and manual runs. The suite uses only the standard
 library and installs into temporary home directories.
 [Publish](../.github/workflows/publish.yml) runs the same tests after a push to
-`main`, then publishes the package when its version is not already on npm.
+`main`, publishes the package when its version is not already on npm, and creates
+a `v<version>` tag and GitHub release for that version. The first release uses a
+short note. Later releases generate notes from the previous tag.
 
 Run the tests with Python's standard library:
 
