@@ -32,9 +32,22 @@
     "access": "public"
   },
   "devDependencies": {
+    "conventional-changelog-conventionalcommits": "10.4.1",
     "semantic-release": "25.0.9"
   },
   "release": {
-    "branches": ["main"]
+    "branches": ["main"],
+    "plugins": [
+      ["@semantic-release/commit-analyzer", {
+        "preset": "conventionalcommits",
+        "presetConfig": {}
+      }],
+      ["@semantic-release/release-notes-generator", {
+        "preset": "conventionalcommits",
+        "presetConfig": {}
+      }],
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
   }
 }
