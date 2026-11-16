@@ -22,6 +22,9 @@ integrates changes, and verifies the outcome. The crew does the legwork.
 | <img src="assets/detective-crew/inspector.svg" alt="Inspector" width="72"> | **Inspector** | Does this change work correctly, and what did we miss? | Concrete findings with impact and evidence, or no findings with verification limits |
 | <img src="assets/detective-crew/consultant.svg" alt="Consultant" width="72"> | **Consultant** | Which approach should we take, and why? | A recommendation, alternatives, trade-offs, risks, and supporting evidence |
 | <img src="assets/detective-crew/tracker.svg" alt="Tracker" width="72"> | **Tracker** (Codex only) | How does this work, and what caused the problem? | Execution paths, likely causes, evidence, and remaining uncertainty |
+| <img src="assets/detective-crew/default.svg" alt="Default" width="72"> | **Default** (Codex only) | No specialist fits. Can you handle this mixed task? | Results with file or source references, changed files, checks run, and unresolved issues |
+| <img src="assets/detective-crew/explorer.svg" alt="Explorer" width="72"> | **Explorer** (`Explore` in Claude Code, `explore` in OpenCode) | How does this connect across the codebase? | Conclusions with file:line references, the execution or dependency path, and what is unresolved |
+| <img src="assets/detective-crew/general.svg" alt="General" width="72"> | **General** (OpenCode only) | Can you take this from investigation to fix? | Mixed investigation and implementation within the assigned scope, with checks and open issues |
 
 ### Models per tool
 
