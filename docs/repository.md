@@ -110,8 +110,9 @@ for pushes, pull requests, and manual runs. The suite uses only the standard
 library and installs into temporary home directories.
 [Publish](../.github/workflows/publish.yml) runs the same tests after a push to
 `main`, publishes the package when its version is not already on npm, and creates
-a `v<version>` tag and GitHub release for that version. The first release uses a
-short note. Later releases generate notes from the previous tag.
+a `v<version>` tag and GitHub release for that version. The tag points at the
+commit npm published. The first release uses a short note. Later releases
+generate notes from the previous tag.
 
 Run the tests with Python's standard library:
 
