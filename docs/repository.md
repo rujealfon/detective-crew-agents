@@ -89,7 +89,7 @@ detective-crew-agents/
 | `install-claude-opencode.py` | Compatibility entry point that calls the combined installer |
 | `previous-install-hashes.json` | Fingerprints of recognized earlier configurations for safe upgrades |
 | `.github/workflows/ci.yml` | Installer tests on Ubuntu for pushes, pull requests, and manual runs |
-| `.github/workflows/publish.yml` | Runs those tests on `main`, publishes when the version is not already on npm, then tags `v<version>` and creates a GitHub release |
+| `.github/workflows/publish.yml` | Runs those tests on `main`, then semantic-release publishes, tags, and creates a GitHub release from the commit title |
 | `tools/session-usage.py` | Read-only local Codex session usage report; not installed or published |
 | `tests/test_uninstall.py` | Tests installation, upgrades, removal, and preservation in temporary home directories |
 | `tests/test_session_usage.py` | Synthetic tests for the local Codex usage report |
@@ -109,10 +109,12 @@ home directory with `grok inspect --json`.
 for pushes, pull requests, and manual runs. The suite uses only the standard
 library and installs into temporary home directories.
 [Publish](../.github/workflows/publish.yml) runs the same tests after a push to
-`main`, publishes the package when its version is not already on npm, and creates
-a `v<version>` tag and GitHub release for that version. The tag points at the
-commit npm published. The first release uses a short note. Later releases
-generate notes from the previous tag.
+`main`, then runs semantic-release. A squash-merge title of `fix` publishes a
+patch, `feat` a minor, and `feat!` or `BREAKING CHANGE` a major. `docs`,
+`chore`, and `ci` do not publish. The version in `package.json` is not the
+release trigger. semantic-release reads the commits since the last `v` tag,
+publishes to npm, tags `v<version>`, and creates the GitHub release. It does
+not commit that version back to the repository.
 
 Run the tests with Python's standard library:
 
